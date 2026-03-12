@@ -1,0 +1,52 @@
+# Disable directory listing
+Options -Indexes
+
+# Enable mod_rewrite
+RewriteEngine On
+
+# Protect sensitive files
+<FilesMatch "\.(env|db|sqlite|md5|sql|txt)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Protect config directory
+<DirectoryMatch "^(config|data|auth)">
+    Order allow,deny
+    Deny from all
+</DirectoryMatch>
+
+# Protect uploads directory - allow direct file access only
+<Directory "uploads">
+    Order allow,deny
+    Allow from all
+    
+    # Prevent PHP execution in uploads directory
+    php_flag engine off
+    AddType text/plain .php .phtml .php3 .php4 .php5 .phps .phar
+</Directory>
+
+# Security headers
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set X-XSS-Protection "1; mode=block"
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+# Compress output
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript
+</IfModule>
+
+# Cache control
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType image/jpeg "access plus 1 year"
+    ExpiresByType image/gif "access plus 1 year"
+    ExpiresByType image/png "access plus 1 year"
+    ExpiresByType text/css "access plus 1 month"
+    ExpiresByType text/javascript "access plus 1 month"
+    ExpiresByType application/javascript "access plus 1 month"
+    ExpiresByType application/x-shockwave-flash "access plus 1 month"
+</IfModule>
