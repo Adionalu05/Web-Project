@@ -12,122 +12,68 @@ if ($auth->isAuthenticated()) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>File Management System</title>
+    <title>Document Management System</title>
     <link rel="stylesheet" href="css/style.css">
-    <style>
-        .landing {
-            min-height: 100vh;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            padding: 2rem;
-        }
-
-        .landing-content {
-            max-width: 800px;
-        }
-
-        .landing h1 {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-        }
-
-        .landing p {
-            font-size: 1.2rem;
-            margin-bottom: 2rem;
-            opacity: 0.9;
-        }
-
-        .landing-buttons {
-            display: flex;
-            gap: 1rem;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        .landing-buttons a {
-            padding: 1rem 2rem;
-            font-size: 1.1rem;
-            border-radius: 4px;
-            text-decoration: none;
-            transition: transform 0.3s;
-        }
-
-        .landing-buttons a:hover {
-            transform: translateY(-2px);
-        }
-
-        .btn-white {
-            background: white;
-            color: #667eea;
-            font-weight: bold;
-        }
-
-        .btn-outline {
-            border: 2px solid white;
-            color: white;
-        }
-
-        .features {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 2rem;
-            margin-top: 3rem;
-            background: rgba(255,255,255,0.1);
-            padding: 2rem;
-            border-radius: 8px;
-            backdrop-filter: blur(10px);
-        }
-
-        .feature {
-            padding: 1rem;
-        }
-
-        .feature h3 {
-            margin-bottom: 0.5rem;
-            font-size: 1.3rem;
-        }
-
-        .feature p {
-            font-size: 0.95rem;
-            margin-bottom: 0;
-        }
-    </style>
 </head>
-<body>
-    <div class="landing">
-        <div class="landing-content">
-            <h1>File Management System</h1>
-            <p>Organize, store, and manage your documents efficiently with powerful searching and categorization tools.</p>
+<body style="background: linear-gradient(135deg,#1e3c72,#2a5298); display:flex; flex-direction:column; min-height:100vh;">
+    
+    <div class="landing-navbar">
+        Kujdes: Ruani informacionin tuaj personal dhe të dokumenteve me kujdes! Mos ndani fjalëkalimet, email-et apo dokumentet tuaja me persona të paautorizuar. Sistemi ynë siguron që vetëm përdoruesit e autorizuar të kenë akses. Për çdo problem ose dyshim mbi sigurinë, kontaktoni administratorin e platformës.
+    </div>
 
-            <div class="landing-buttons">
-                <a href="login.php" class="btn-white">Login</a>
-                <a href="register.php" class="btn-outline">Register</a>
-            </div>
+    <div class="landing-main">
+        <div class="landing-title">
+            Document Management System
+        </div>
 
-            <div class="features">
-                <div class="feature">
-                    <h3>👤 User Management</h3>
-                    <p>Secure registration and login with session management</p>
-                </div>
-                <div class="feature">
-                    <h3>📁 File Upload</h3>
-                    <p>Upload files with titles, tags, and categories (up to 10 MB)</p>
-                </div>
-                <div class="feature">
-                    <h3>🏷️ Organization</h3>
-                    <p>Organize documents using categories and tags</p>
-                </div>
-                <div class="feature">
-                    <h3>🔍 Smart Search</h3>
-                    <p>Find documents by title, category, tags, or uploader</p>
-                </div>
-            </div>
+        <div class="landing-container">
+            <p>Nëse keni një llogari shtypni:</p>
+            <a href="login.php"><button>Login</button></a>
+
+            <p>Nëse ende nuk keni hapur një llogari shtypni:</p>
+            <a href="register.php"><button>Register</button></a>
         </div>
     </div>
+
+    <section class="services-section">
+        <h2>Sherbimet tona</h2>
+        
+        <div class="services-container">
+            
+            <div class="service-card">
+                <h3>Upload Dokumentesh</h3>
+                <p>Ngarkoni dokumentet tuaja në mënyrë të sigurt dhe të strukturuar.</p>
+            </div>
+
+            <div class="service-card">
+                <h3>Kerkim i avancuar</h3>
+                <p>Gjeni shpejt dokumentet sipas etiketeve, datave ose emrit.</p>
+            </div>
+
+            <div class="service-card">
+                <h3>Kontroll Aksesi</h3>
+                <p>Siguroni që dokumentet të aksesohen vetëm nga përdoruesit e autorizuar.</p>
+            </div>
+
+        </div>
+    </section>
+
+    <footer class="landing-footer">
+        <div class="footer-flex">
+            <div class="footer-desc">
+                <p>Document Management System është një platformë që ndihmon përdoruesit të ruajnë dhe organizojnë dokumentet në mënyrë të sigurt dhe të strukturuar.</p>
+            </div>
+
+            <div class="footer-stores">
+                <img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="App Store">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" alt="Google Play">
+            </div>
+
+            <div class="footer-contact">
+                <p>Për çdo paqartësi, kontaktoni: <a href="tel:+35512345678">+355 12 345 678</a></p>
+            </div>
+
+        </div>
+    </footer>
 </body>
 </html>
