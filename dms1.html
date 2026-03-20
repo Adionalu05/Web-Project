@@ -37,7 +37,9 @@ box-shadow:0 2px 10px rgba(0,0,0,0.1);
 font-size:22px;
 font-weight:bold;
 color:#4e1e72;
-}.nav-buttons{
+}
+
+.navbuttons{
 display:flex;
 gap:15px;
 align-items:center;
@@ -67,10 +69,7 @@ color:white;
 font-weight:600;
 transition:0.3s;
 }
-.btn-register:hover{
-transform:translateY(-2px);
-box-shadow:0 5px 15px rgba(0,0,0,0.2);
-}
+
 .btn-register:hover{
 transform:translateY(-2px);
 box-shadow:0 5px 15px rgba(0,0,0,0.2);
@@ -101,6 +100,8 @@ text-align:center;
 font-size:28px;
 margin-bottom:30px;
 }
+
+
 .expand-search{
 display:flex;
 align-items:center;
@@ -129,6 +130,7 @@ transition:0.4s;
 background:transparent;
 font-size:15px;
 }
+
 .expand-search:hover{
 width:300px;
 padding:10px 20px;
@@ -137,6 +139,8 @@ padding:10px 20px;
 .expand-search:hover input{
 width:100%;
 }
+
+
 .services-container{
 display:flex;
 justify-content:center;
@@ -154,6 +158,7 @@ text-align:center;
 transition:0.3s;
 cursor:pointer;
 }
+
 .service-card:hover{
 transform:translateY(-10px);
 }
@@ -162,36 +167,6 @@ transform:translateY(-10px);
 font-size:40px;
 color:#2a5298;
 margin-bottom:15px;
-display:block;
-}
-
-.footer{
-background:#5c1c6f;
-color:rgb(222, 217, 223);
-padding:40px 60px;
-}
-
-.footer-container{
-display:flex;
-justify-content:space-between;
-align-items:center;
-flex-wrap:wrap;
-}
-
-.footer-about{
-max-width:300px;
-}
-
-.footer-contact a{
-color:white;
-font-weight:bold;
-text-decoration:none;
-}
-
-.footer-stores img{
-height:40px;
-margin-left:10px;
-cursor:pointer;
 }
 
 .howitworks{
@@ -220,6 +195,7 @@ font-size:35px;
 color:#2a5298;
 margin-bottom:10px;
 }
+
 .security{
 padding:70px;
 background:#f4f6fb;
@@ -252,12 +228,47 @@ font-size:40px;
 color:#4e1e72;
 margin-bottom:15px;
 }
-.social-icons{
+
+.footer{
+background:linear-gradient(135deg,#4e1e72,#7e2a98);
+color:white;
+padding:40px 60px;
+}
+
+.footer-container{
+display:flex;
+justify-content:space-between;
+align-items:flex-start;
+flex-wrap:wrap;
+gap:30px;
+}
+
+.footer-about{
+max-width:300px;
+}
+
+.footer-contact a{
+color:white;
+font-weight:bold;
+text-decoration:none;
+}
+
+.footer-stores img{
+height:40px;
 margin-top:10px;
+transition:0.3s;
+}
+
+.footer-stores img:hover{
+transform:scale(1.05);
+}
+
+.social-icons{
+margin-top:15px;
 }
 
 .social-icons i{
-margin-right:10px;
+margin-right:12px;
 font-size:20px;
 cursor:pointer;
 transition:0.3s;
@@ -266,61 +277,119 @@ transition:0.3s;
 .social-icons i:hover{
 color:#e6b9f0;
 }
+
 .footer-bottom{
 text-align:center;
 margin-top:30px;
-border-top:1px solid rgba(255,255,255,0.3);
+border-top:1px solid rgba(255,255,255,0.2);
 padding-top:15px;
 font-size:14px;
+}
+.cta-new{
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:70px 60px;
+background:linear-gradient(135deg,#4e1e72,#7e2a98);
+color:white;
+flex-wrap:wrap;
+gap:40px;
+}
+
+.cta-content{
+max-width:500px;
+}
+
+.cta-content h2{
+font-size:32px;
+margin-bottom:15px;
+}
+
+.cta-content p{
+line-height:1.6;
+margin-bottom:25px;
+}
+
+/* BUTTONS */
+
+.cta-buttons{
+display:flex;
+gap:15px;
+flex-wrap:wrap;
+}
+
+.btn-primary{
+background:white;
+color:#4e1e72;
+padding:12px 25px;
+border-radius:25px;
+text-decoration:none;
+font-weight:bold;
+transition:0.3s;
+}
+
+.btn-primary:hover{
+transform:scale(1.05);
+box-shadow:0 5px 15px rgba(0,0,0,0.2);
+}
+
+.btn-secondary{
+border:2px solid white;
+color:white;
+padding:12px 25px;
+border-radius:25px;
+text-decoration:none;
+font-weight:bold;
+transition:0.3s;
+}
+
+.btn-secondary:hover{
+background:white;
+color:#4e1e72;
+}
+
+/* ICON SIDE */
+
+.cta-image{
+font-size:100px;
+opacity:0.2;
 }
 
 </style>
 </head>
 
 <body>
-<header class="navbar">
 
-<div class="logo">Document Management System</div>
 <div class="alertbar">
 Kujdes: Mos ndani kredencialet e llogarise tuaj me persona te paautorizuar.
 </div>
-  <div class="navbuttons">
-    <a href="login1.html" class="btn-login">Login</a>
-    <a href="register.html" class="btn-register">Register</a>
-  </div>
 
-  </div>
+<header class="navbar">
+<div class="logo">Document Management System</div>
 
+<div class="navbuttons">
+<a href="login1.html" class="btn-login">Login</a>
+<a href="register.html" class="btn-register">Register</a>
+</div>
 </header>
 
 <section class="hero">
-
-<div class="hero-text">
-
-<h1>Menaxhoni dokumentet tuaja në mënyrë të sigurt</h1>
-
+<h1>Menaxhoni dokumentet tuaja ne menyre te sigurt</h1>
 <p>
 Platforma jone ju lejon te ngarkoni, organizoni dhe kerkoni dokumente ne menyre
-te shpejte dhe te sigurt duke perdorur nje sistem modern menaxhimi dokumentesh.
+te shpejte dhe te sigurt duke perdorur nje sistem modern.
 </p>
-
-</div>
-
 </section>
 
 <section class="services">
-
 <h2>Sherbimet tona</h2>
 
-
 <div class="expand-search">
-  <i class="fa-solid fa-magnifying-glass"></i>
-  <input type="text" placeholder="Kerko sherbimin...">
+<i class="fa-solid fa-magnifying-glass"></i>
+<input type="text" placeholder="Kërko shërbimin...">
 </div>
 
-</div>
-
- <div class="services-container">
+<div class="services-container">
 
 <div class="service-card">
 <i class="fa-solid fa-upload service-icon"></i>
@@ -341,11 +410,9 @@ te shpejte dhe te sigurt duke perdorur nje sistem modern menaxhimi dokumentesh.
 </div>
 
 </div>
-
 </section>
 
 <section class="howitworks">
-
 <h2>Si funksionon sistemi</h2>
 
 <div class="steps">
@@ -359,7 +426,7 @@ te shpejte dhe te sigurt duke perdorur nje sistem modern menaxhimi dokumentesh.
 <div class="step">
 <i class="fa-solid fa-upload"></i>
 <h3>Ngarko dokument</h3>
-<p>Ngarko dokumentet në sistem.</p>
+<p>Ngarko dokumentet ne sistem.</p>
 </div>
 
 <div class="step">
@@ -369,10 +436,9 @@ te shpejte dhe te sigurt duke perdorur nje sistem modern menaxhimi dokumentesh.
 </div>
 
 </div>
-
 </section>
-<section class="security">
 
+<section class="security">
 <h2>Siguria e dokumenteve</h2>
 
 <div class="security-container">
@@ -386,7 +452,7 @@ te shpejte dhe te sigurt duke perdorur nje sistem modern menaxhimi dokumentesh.
 <div class="security-card">
 <i class="fa-solid fa-user-lock"></i>
 <h3>Kontroll Aksesi</h3>
-<p>Vetëm përdoruesit e autorizuar mund të aksesojnë dokumentet.</p>
+<p>Vetëm perdoruesit e autorizuar mund te aksesojne dokumentet.</p>
 </div>
 
 <div class="security-card">
@@ -396,10 +462,33 @@ te shpejte dhe te sigurt duke perdorur nje sistem modern menaxhimi dokumentesh.
 </div>
 
 </div>
+</section>
+<section class="cta-new">
+
+<div class="cta-content">
+
+<h2>Menaxho dokumentet si profesionist</h2>
+
+<p>
+Filloni tani dhe organizoni çdo dokument në një platformë të vetme,
+të sigurt dhe të shpejtë.
+</p>
+
+<div class="cta-buttons">
+<a href="register.html" class="btn-primary">Fillo Falas</a>
+<a href="login1.html" class="btn-secondary">Kam llogari</a>
+</div>
+
+</div>
+
+<div class="cta-image">
+<i class="fa-solid fa-folder-open"></i>
+</div>
 
 </section>
+</section>
 
-<footer>
+<footer class="footer">
 
 <div class="footer-container">
 
@@ -407,29 +496,37 @@ te shpejte dhe te sigurt duke perdorur nje sistem modern menaxhimi dokumentesh.
 <h3>Document Management System</h3>
 <p>
 Ky sistem ju ndihmon te ruani dhe organizoni dokumentet tuaja
-ne menyre te strukturuar dhe te sigurt.
+në menyre te strukturuar dhe te sigurt.
 </p>
 </div>
 
 <div class="footer-contact">
 <p>Kontaktoni per çdo paqartesi:</p>
-<a href="tel:+355690000000">+355 69 000 0000</a>
+<a href="tel:+355690000000">+355 69 000 000</a>
 </div>
 
 <div class="footer-stores">
-    <img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="App Store">
-      <img src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" alt="Google Play">
-    </div>
+<a href="#">
+<img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="App Store">
+</a>
+<a href="#">
+<img src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" alt="Google Play">
+</a>
+</div>
 
 <div class="social-icons">
 <i class="fa-brands fa-facebook"></i>
 <i class="fa-brands fa-instagram"></i>
 <i class="fa-brands fa-linkedin"></i>
 </div>
+
 </div>
+
 <div class="footer-bottom">
 <p>© 2026 Document Management System | All Rights Reserved</p>
 </div>
+
 </footer>
+
 </body>
 </html>
