@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="sq">
+<head>
+<meta charset="UTF-8">
+<title>Settings - DMS</title>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+
+body{
+margin:0;
+font-family:Arial, Helvetica, sans-serif;
+background:#f4f6fb;
+display:flex;
+}
+.sidebar{
+width:230px;
+background:#521e72;
+color:white;
+height:100vh;
+padding:20px;
+}
+
+.sidebar h2{
+margin-bottom:30px;
+}
+
+.sidebar a{
+display:block;
+color:white;
+text-decoration:none;
+margin:15px 0;
+}
+
+.main{
+flex:1;
+}
+
+
+.topbar{
+background:white;
+padding:15px 30px;
+display:flex;
+justify-content:space-between;
+box-shadow:0 2px 10px rgba(0,0,0,0.1);
+}
+
+.settings{
+display:flex;
+padding:30px;
+gap:20px;
+}
+
+.menu{
+width:220px;
+background:white;
+border-radius:10px;
+padding:20px;
+box-shadow:0 5px 15px rgba(0,0,0,0.08);
+}
+
+.menu label{
+display:block;
+padding:12px;
+margin-bottom:10px;
+border-radius:8px;
+cursor:pointer;
+transition:0.3s;
+}
+
+.menu label:hover{
+background:#f2ebf7;
+}
+
+input[type="radio"]{
+display:none;
+}
+
+#profile:checked ~ .main .settings .menu label[for="profile"],
+#security:checked ~ .main .settings .menu label[for="security"],
+#preferences:checked ~ .main .settings .menu label[for="preferences"],
+#notifications:checked ~ .main .settings .menu label[for="notifications"]{
+background:#521e72;
+color:white;
+}
+
+.content{
+flex:1;
+background:white;
+border-radius:10px;
+padding:30px;
+box-shadow:0 5px 15px rgba(0,0,0,0.08);
+}
+
+.tab{
+display:none;
+}
+
+#profile:checked ~ .main .settings .content #tab-profile,
+#security:checked ~ .main .settings .content #tab-security,
+#preferences:checked ~ .main .settings .content #tab-preferences,
+#notifications:checked ~ .main .settings .content #tab-notifications{
+display:block;
+}
+
+.input-group{
+margin-bottom:20px;
+}
+
+.input-group label{
+display:block;
+font-size:13px;
+margin-bottom:6px;
+}
+
+.input-group input{
+width:100%;
+padding:12px;
+border-radius:8px;
+border:1px solid #ddd;
+}
+
+.row{
+display:flex;
+gap:20px;
+}
+
+.row .input-group{
+flex:1;
+}
+
+.save-btn{
+background:linear-gradient(135deg,#521e72,#7e2a98);
+color:white;
+border:none;
+padding:12px 25px;
+border-radius:25px;
+cursor:pointer;
+}
+
+.switch{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin:20px 0;
+}
+
+.switch input{
+display:none;
+}
+
+.slider{
+width:45px;
+height:22px;
+background:#ccc;
+border-radius:20px;
+position:relative;
+cursor:pointer;
+transition:0.3s;
+}
+
+.slider::before{
+content:"";
+position:absolute;
+width:18px;
+height:18px;
+background:white;
+border-radius:50%;
+top:2px;
+left:2px;
+transition:0.3s;
+}
+
+.switch input:checked + .slider{
+background:#7e2a98;
+}
+
+.switch input:checked + .slider::before{
+transform:translateX(23px);
+}
+
+.avatar{
+display:flex;
+align-items:center;
+gap:15px;
+margin-bottom:20px;
+}
+
+.avatar-circle{
+width:60px;
+height:60px;
+border-radius:50%;
+background:#7e2a98;
+color:white;
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:22px;
+}
+
+</style>
+</head>
+
+<body>
+
+<input type="radio" name="tab" id="profile" checked>
+<input type="radio" name="tab" id="security">
+<input type="radio" name="tab" id="preferences">
+<input type="radio" name="tab" id="notifications">
+
+
+<div class="sidebar">
+<h2>DMS</h2>
+<a href="dashboard.html">Dashboard</a>
+<a href="#">Dokumentet</a>
+<a href="#">Ngarko</a>
+<a href="#">Settings</a>
+</div>
+
+<div class="main">
+
+<div class="topbar">
+<h3>Settings</h3>
+<span>👤 Kejsi</span>
+</div>
+
+<div class="settings">
+
+<div class="menu">
+<label for="profile">👤 Profile</label>
+<label for="security">🔒 Security</label>
+<label for="preferences">⚙ Preferences</label>
+<label for="notifications">🔔 Notifications</label>
+</div>
+
+<div class="content">
+
+<div id="tab-profile" class="tab">
+<h3>Profile</h3>
+
+<div class="avatar">
+<div class="avatar-circle">K</div>
+</div>
+
+<div class="row">
+<div class="input-group">
+<label>Emri</label>
+<input type="text" value="Kejsi">
+</div>
+
+<div class="input-group">
+<label>Mbiemri</label>
+<input type="text">
+</div>
+</div>
+
+<div class="input-group">
+<label>Email</label>
+<input type="email">
+</div>
+
+<button class="save-btn">Ruaj</button>
+</div>
+
+<div id="tab-security" class="tab">
+<h3>Security</h3>
+
+<p>Menaxho cilesimet e sigurise se llogarise.</p>
+
+<div class="switch">
+<span>Two-Factor Authentication</span>
+<label>
+<input type="checkbox">
+<div class="slider"></div>
+</label>
+</div>
+
+<div class="switch">
+<span>Login Alerts</span>
+<label>
+<input type="checkbox" checked>
+<div class="slider"></div>
+</label>
+</div>
+
+</div>
+<div id="tab-preferences" class="tab">
+<h3>Preferences</h3>
+
+<div class="switch">
+<span>Dark Mode</span>
+<label>
+<input type="checkbox">
+<div class="slider"></div>
+</label>
+</div>
+
+<div class="switch">
+<span>Language English</span>
+<label>
+<input type="checkbox">
+<div class="slider"></div>
+</label>
+</div>
+
+</div>
+<div id="tab-notifications" class="tab">
+<h3>Notifications</h3>
+
+<div class="switch">
+<span>Email Notifications</span>
+<label>
+<input type="checkbox" checked>
+<div class="slider"></div>
+</label>
+</div>
+
+<div class="switch">
+<span>Security Alerts</span>
+<label>
+<input type="checkbox">
+<div class="slider"></div>
+</label>
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</body>
+</html>
