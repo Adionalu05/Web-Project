@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="sq">
+<head>
+<meta charset="UTF-8">
+<title>Regjistrohu</title>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+
+body{
+margin:0;
+font-family:Arial, Helvetica, sans-serif;
+background:linear-gradient(135deg,#4e1e72,#7e2a98);
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+}
+
+
+
+.register-container{
+background:white;
+padding:40px;
+border-radius:12px;
+width:350px;
+box-shadow:0 10px 25px rgba(0,0,0,0.2);
+text-align:center;
+}
+
+
+.register-container h2{
+margin-bottom:20px;
+color:#4e1e72;
+}
+
+
+
+.input-group{
+margin-bottom:15px;
+text-align:left;
+}
+
+.input-group label{
+display:block;
+margin-bottom:5px;
+font-weight:600;
+}
+
+.input-group input{
+width:100%;
+padding:10px;
+border-radius:8px;
+border:1px solid #ccc;
+outline:none;
+transition:0.3s;
+}
+
+.input-group input:focus{
+border-color:#7e2a98;
+box-shadow:0 0 5px rgba(126,42,152,0.3);
+}
+
+
+
+.btn-register{
+width:100%;
+padding:12px;
+background:linear-gradient(135deg,#4e1e72,#7e2a98);
+border:none;
+border-radius:25px;
+color:white;
+font-weight:bold;
+cursor:pointer;
+transition:0.3s;
+margin-top:10px;
+}
+
+.btn-register:hover{
+transform:translateY(-2px);
+box-shadow:0 5px 15px rgba(0,0,0,0.2);
+}
+
+
+.login-link{
+margin-top:15px;
+font-size:14px;
+}
+
+.login-link a{
+color:#7e2a98;
+text-decoration:none;
+font-weight:bold;
+}
+
+.login-link a:hover{
+text-decoration:underline;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="register-container">
+
+<h2>Krijo llogari</h2>
+
+<form>
+
+<div class="input-group">
+<label>Emri i plote</label>
+<input type="text" placeholder="Shkruaj emrin">
+</div>
+
+<div class="input-group">
+<label>Email</label>
+<input type="email" placeholder="Shkruaj email">
+</div>
+
+<div class="input-group">
+<label>Password</label>
+<input type="password" placeholder="Shkruaj password">
+</div>
+
+<div class="input-group">
+<label>Konfirmo Password</label>
+<input type="password" placeholder="Perserit password">
+</div>
+
+<button class="btn-register">Regjistrohu</button>
+
+</form>
+
+<div class="login-link">
+Ke llogari? <a href="login1.html">Login</a>
+</div>
+
+</div>
+
+</body>
+</html>

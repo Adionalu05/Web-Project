@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="sq">
+<head>
+<meta charset="UTF-8">
+<title>Dokumentet - DMS</title>
+
+<style>
+body{
+margin:0;
+font-family:Arial;
+background:#f4f6fb;
+display:flex;
+}
+
+.sidebar{
+width:230px;
+background:#521e72;
+color:white;
+height:100vh;
+padding:20px;
+}
+
+.sidebar a{
+display:block;
+color:white;
+text-decoration:none;
+margin:15px 0;
+}
+
+.main{
+flex:1;
+}
+
+.topbar{
+background:white;
+padding:15px 30px;
+box-shadow:0 2px 10px rgba(0,0,0,0.1);
+}
+
+.container{
+padding:30px;
+}
+
+table{
+width:100%;
+background:white;
+border-radius:10px;
+border-collapse:collapse;
+overflow:hidden;
+}
+
+th,td{
+padding:15px;
+border-bottom:1px solid #eee;
+}
+
+th{
+background:#521e72;
+color:white;
+}
+
+.actions button{
+margin-right:8px;
+cursor:pointer;
+border:none;
+background:none;
+font-size:16px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="sidebar">
+<h2>DMS</h2>
+<a href="#">Dashboard</a>
+<a href="#">Dokumentet</a>
+<a href="#">Ngarko</a>
+<a href="#">Settings</a>
+</div>
+
+<div class="main">
+<div class="topbar">
+<h3>Dokumentet</h3>
+</div>
+
+<div class="container">
+
+<table id="table">
+<tr>
+<th>Emri</th>
+<th>Data</th>
+<th>Veprime</th>
+</tr>
+
+<tr>
+<td class="name">Raport.pdf</td>
+<td>20/03/2026</td>
+<td class="actions">
+<button onclick="viewDoc(this)">👁</button>
+<button onclick="downloadDoc(this)">⬇</button>
+<button onclick="deleteDoc(this)">❌</button>
+<button onclick="editName(this)">✏️</button>
+</td>
+</tr>
+
+<tr>
+<td class="name">Projekt.docx</td>
+<td>18/03/2026</td>
+<td class="actions">
+<button onclick="viewDoc(this)">👁</button>
+<button onclick="downloadDoc(this)">⬇</button>
+<button onclick="deleteDoc(this)">❌</button>
+<button onclick="editName(this)">✏️</button>
+</td>
+</tr>
+
+</table>
+
+</div>
+</div>
+
+<script>
+
+
+function viewDoc(btn){
+let name = btn.closest("tr").querySelector(".name").innerText;
+alert("Po hap dokumentin: " + name);
+}
+
+
+function downloadDoc(btn){
+let name = btn.closest("tr").querySelector(".name").innerText;
+alert("Po shkarkohet: " + name);
+}
+
+
+function deleteDoc(btn){
+btn.closest("tr").remove();
+}
+
+
+function editName(btn){
+let td = btn.closest("tr").querySelector(".name");
+let newName = prompt("Shkruaj emrin e ri:", td.innerText);
+
+if(newName){
+td.innerText = newName;
+}
+}
+
+</script>
+
+</body>
+</html>
