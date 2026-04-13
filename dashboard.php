@@ -62,7 +62,7 @@ if ($search) {
             <!-- Upload Widget -->
             <div class="widget">
                 <h3>Quick Upload</h3>
-                <form id="uploadForm" enctype="multipart/form-data">
+                <form id="uploadForm" enctype="multipart/form-data" method="POST">
                     <div class="form-group">
                         <label for="title">Document Title</label>
                         <input type="text" id="title" name="title" required>
@@ -256,7 +256,7 @@ if ($search) {
     </div>
 
     <!-- jQuery -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJ+Y7d0I6usqEXp6ukp8T0Fh8XYx3tZ4a2Z8U=" crossorigin="anonymous"></script>
+    <script src="js/jquery.min.js"></script>
     <script src="js/dashboard.js"></script>
 </body>
 </html>
