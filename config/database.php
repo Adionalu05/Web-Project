@@ -23,12 +23,53 @@ function initializeDatabase($db) {
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT UNIQUE NOT NULL,
-            email TEXT UNIQUE NOT NULL,
+            email TEXT NOT NULL,
+            email_hash TEXT UNIQUE NOT NULL,
             password TEXT NOT NULL,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )
     ");
+
+    // Ensure email_hash exists for older databases
+    try {
+        // SQLite does not allow UNIQUE in ALTER TABLE ADD COLUMN, so add the column first then create a unique index.
+        $db->exec("ALTER TABLE users ADD COLUMN email_hash TEXT NOT NULL DEFAULT ''");
+    } catch (Exception $e) {
+        // ignore if column already exists
+    }
+
+    // Create a unique index for email_hash if it doesn't already exist
+    try {
+        $db->exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email_hash ON users(email_hash)");
+    } catch (Exception $e) {
+        // ignore if index already exists or cannot be created
+    }
+
+    // Backfill email_hash for existing rows (and encrypt email values)
+    try {
+        $stmt = $db->query("SELECT id, email, email_hash FROM users WHERE email_hash = '' OR email_hash IS NULL");
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($rows as $row) {
+            $storedEmail = $row['email'];
+            $plainEmail = $storedEmail;
+
+            // If the email is already encrypted in the database, decrypt it first
+            $decrypted = decryptValue($storedEmail);
+            if ($decrypted !== false && $decrypted !== null && $decrypted !== '') {
+                $plainEmail = $decrypted;
+            }
+
+            $emailHash = hash('sha256', strtolower(trim($plainEmail)));
+            $encryptedEmail = encryptValue($plainEmail);
+
+            $update = $db->prepare("UPDATE users SET email = :email, email_hash = :email_hash WHERE id = :id");
+            $update->execute(['email' => $encryptedEmail, 'email_hash' => $emailHash, 'id' => $row['id']]);
+        }
+    } catch (Exception $e) {
+        // ignore errors during migration step
+    }
+
 
     // Categories table
     $db->exec("
@@ -109,4 +150,46 @@ initializeDatabase($db);
 define('MAX_FILE_SIZE', 10 * 1024 * 1024); // 10 MB
 define('ALLOWED_FILE_TYPES', ['pdf', 'docx', 'doc', 'jpg', 'jpeg', 'png', 'txt', 'xlsx', 'xls']);
 define('SESSION_TIMEOUT', 24 * 60 * 60); // 24 hours
+
+// Encryption settings (used for sensitive data at rest)
+// In production, set ENCRYPTION_KEY via environment variable and keep it secret.
+define('ENCRYPTION_KEY', getenv('ENCRYPTION_KEY') ?: 'change_me_to_a_random_secret');
+
+define('ENCRYPTION_METHOD', 'AES-256-CBC');
+
+define('ENCRYPTION_AVAILABLE', function_exists('openssl_encrypt') && function_exists('openssl_cipher_iv_length'));
+
+define('ENCRYPTION_IV_LENGTH', ENCRYPTION_AVAILABLE ? openssl_cipher_iv_length(ENCRYPTION_METHOD) : 16);
+
+function encryptValue($value) {
+    if ($value === null || $value === '') {
+        return $value;
+    }
+
+    // If OpenSSL is not available, fall back to storing cleartext
+    if (!ENCRYPTION_AVAILABLE) {
+        return $value;
+    }
+
+    $iv = openssl_random_pseudo_bytes(ENCRYPTION_IV_LENGTH);
+    $encrypted = openssl_encrypt($value, ENCRYPTION_METHOD, ENCRYPTION_KEY, 0, $iv);
+    return base64_encode($iv . $encrypted);
+}
+
+function decryptValue($value) {
+    if ($value === null || $value === '') {
+        return $value;
+    }
+
+    if (!ENCRYPTION_AVAILABLE) {
+        return $value;
+    }
+
+    $decoded = base64_decode($value);
+    $iv = substr($decoded, 0, ENCRYPTION_IV_LENGTH);
+    $ciphertext = substr($decoded, ENCRYPTION_IV_LENGTH);
+
+    $decrypted = openssl_decrypt($ciphertext, ENCRYPTION_METHOD, ENCRYPTION_KEY, 0, $iv);
+    return $decrypted !== false ? $decrypted : $value;
+}
 ?>

@@ -215,6 +215,77 @@ class DocumentHandler {
     }
 
     /**
+     * Get a document by ID (with tags)
+     */
+    public function getDocumentById($documentId) {
+        $userId = $this->auth->getCurrentUserId();
+
+        if (!$userId) {
+            return null;
+        }
+
+        try {
+            $stmt = $this->db->prepare(
+                "SELECT d.*, GROUP_CONCAT(t.name, ', ') as tags
+                FROM documents d
+                LEFT JOIN document_tags dt ON d.id = dt.document_id
+                LEFT JOIN tags t ON dt.tag_id = t.id
+                WHERE d.id = :id AND d.user_id = :user_id
+                GROUP BY d.id"
+            );
+            $stmt->execute(['id' => $documentId, 'user_id' => $userId]);
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            return null;
+        }
+    }
+
+    /**
+     * Update document metadata (title/category/tags/description)
+     */
+    public function updateDocumentMetadata($documentId, $title, $category_id, $tags, $description) {
+        $userId = $this->auth->getCurrentUserId();
+
+        if (!$userId) {
+            return ['success' => false, 'error' => 'User not authenticated'];
+        }
+
+        if (empty($title)) {
+            return ['success' => false, 'error' => 'Title is required'];
+        }
+
+        try {
+            // Ensure document belongs to user
+            $stmt = $this->db->prepare("SELECT id FROM documents WHERE id = :id AND user_id = :user_id");
+            $stmt->execute(['id' => $documentId, 'user_id' => $userId]);
+            if (!$stmt->fetch()) {
+                return ['success' => false, 'error' => 'Document not found'];
+            }
+
+            // Update document entry
+            $stmt = $this->db->prepare("UPDATE documents SET title = :title, category_id = :category_id, description = :description, updated_at = CURRENT_TIMESTAMP WHERE id = :id");
+            $stmt->execute([
+                'id' => $documentId,
+                'title' => $title,
+                'category_id' => $category_id ?: null,
+                'description' => $description
+            ]);
+
+            // Reset tags
+            $stmt = $this->db->prepare("DELETE FROM document_tags WHERE document_id = :document_id");
+            $stmt->execute(['document_id' => $documentId]);
+
+            if (!empty($tags)) {
+                $this->addTagsToDocument($documentId, $tags);
+            }
+
+            return ['success' => true, 'message' => 'Document updated successfully'];
+        } catch (Exception $e) {
+            return ['success' => false, 'error' => 'Database error: ' . $e->getMessage()];
+        }
+    }
+
+    /**
      * Get all tags
      */
     public function getAllTags() {

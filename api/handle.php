@@ -1,10 +1,23 @@
 <?php
+
+/**
+ * Nderfaqja per trajtimin e kerkesave AJAX nga 'dashboard.js' dhe faqet e tjera te mbrojtura. Ky file perfshin:
+ */
+
+
 header('Content-Type: application/json');
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../auth/auth.php';
 require_once __DIR__ . '/../auth/document_handler.php';
 
 $action = $_GET['action'] ?? $_POST['action'] ?? null;
+
+// ! Ensure the request comes from within the same origin (not from external domains)
+if (!isSameOriginRequest()) {
+    http_response_code(403);
+    echo json_encode(['success' => false, 'error' => 'Forbidden']);
+    exit;
+}
 
 if (!$auth->isAuthenticated()) {
     http_response_code(401);

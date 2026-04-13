@@ -1,6 +1,29 @@
 <?php
+
+
+/**
+ * Specifikohet llogjika e autentifikimit:
+    * LOGIN / LOGOUT
+    * Vetem nje faqe e aksesueshme nga jashte
+    * 
+ */
+
+
+
 session_start();
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/email.php';
+
+// Ensure requests are coming from the same origin (helps prevent CSRF/referrer abuse)
+function isSameOriginRequest() {
+    if (empty($_SERVER['HTTP_REFERER'])) {
+        return true; // allow direct access (typing URL)
+    }
+    $refHost = parse_url($_SERVER['HTTP_REFERER'], PHP_URL_HOST);
+    $host = $_SERVER['HTTP_HOST'] ?? '';
+    return $refHost === $host;
+}
+
 
 class Auth {
     private $db;
@@ -35,9 +58,10 @@ class Auth {
         }
 
         try {
-            // Check if user already exists
-            $stmt = $this->db->prepare("SELECT id FROM users WHERE username = :username OR email = :email");
-            $stmt->execute(['username' => $username, 'email' => $email]);
+            // Check if user already exists (by username or email hash)
+            $emailHash = hash('sha256', strtolower(trim($email)));
+            $stmt = $this->db->prepare("SELECT id FROM users WHERE username = :username OR email_hash = :email_hash");
+            $stmt->execute(['username' => $username, 'email_hash' => $emailHash]);
             if ($stmt->fetch()) {
                 return ['success' => false, 'error' => 'Username or email already exists'];
             }
@@ -45,16 +69,25 @@ class Auth {
             // Hash password
             $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
 
-            // Create user
+            // Create user (store email encrypted)
+            $encryptedEmail = encryptValue($email);
             $stmt = $this->db->prepare("
-                INSERT INTO users (username, email, password) 
-                VALUES (:username, :email, :password)
+                INSERT INTO users (username, email, email_hash, password) 
+                VALUES (:username, :email, :email_hash, :password)
             ");
             $stmt->execute([
                 'username' => $username,
-                'email' => $email,
+                'email' => $encryptedEmail,
+                'email_hash' => $emailHash,
                 'password' => $hashedPassword
             ]);
+
+            // Send a welcome email (best effort)
+            $subject = "Welcome to the Document Management System";
+            $body = "<p>Hi " . htmlspecialchars($username) . ",</p>" .
+                    "<p>Thank you for registering. You can now log in using your credentials.</p>" .
+                    "<p>If you did not register, please ignore this email.</p>";
+            @sendEmail($email, $subject, $body);
 
             return ['success' => true, 'message' => 'Registration successful. Please login.'];
         } catch (Exception $e) {
@@ -166,7 +199,13 @@ class Auth {
         try {
             $stmt = $this->db->prepare("SELECT id, username, email FROM users WHERE id = :id");
             $stmt->execute(['id' => $this->getCurrentUserId()]);
-            return $stmt->fetch(PDO::FETCH_ASSOC);
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($user && !empty($user['email'])) {
+                $user['email'] = decryptValue($user['email']);
+            }
+
+            return $user;
         } catch (Exception $e) {
             return null;
         }
@@ -179,8 +218,16 @@ $auth = new Auth($db);
 $public_pages = ['login.php', 'register.php', 'index.php'];
 $current_page = basename($_SERVER['PHP_SELF']);
 
-if (!in_array($current_page, $public_pages) && !$auth->isAuthenticated()) {
-    header('Location: login.php?redirect=' . urlencode($_SERVER['REQUEST_URI']));
-    exit;
+if (!in_array($current_page, $public_pages)) {
+    // Protect protected pages from being framed/linked from external domains
+    if (!isSameOriginRequest()) {
+        http_response_code(403);
+        exit('Access denied');
+    }
+
+    if (!$auth->isAuthenticated()) {
+        header('Location: login.php?redirect=' . urlencode($_SERVER['REQUEST_URI']));
+        exit;
+    }
 }
 ?>

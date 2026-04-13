@@ -1,4 +1,10 @@
 <?php
+
+/**
+ * Perdor nocionin AJAX (Asynchronous JavaScript and XML) nepermjet jQuery per te bere kerkesat ne background e cila lejon kryerjen e kerkesave pa bere reload faqen. Komunikon me 'handle.php'. Ky file perfshin: 
+* 
+ */
+
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/auth/auth.php';
 require_once __DIR__ . '/auth/document_handler.php';
@@ -164,7 +170,8 @@ if ($search) {
                                 <td><?php echo formatFileSize($doc['file_size']); ?></td>
                                 <td><?php echo formatDate($doc['uploaded_at']); ?></td>
                                 <td>
-                                    <a href="<?php echo htmlspecialchars($doc['file_path']); ?>" download class="btn btn-small btn-primary">Download</a>
+                                    <a href="download.php?doc_id=<?php echo $doc['id']; ?>" class="btn btn-small btn-primary">Download</a>
+                                    <a href="edit_document.php?doc_id=<?php echo $doc['id']; ?>" class="btn btn-small btn-secondary">Edit</a>
                                     <button class="btn btn-small btn-danger" onclick="deleteDocument(<?php echo $doc['id']; ?>)">Delete</button>
                                 </td>
                             </tr>
@@ -175,6 +182,8 @@ if ($search) {
         </div>
     </div>
 
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJ+Y7d0I6usqEXp6ukp8T0Fh8XYx3tZ4a2Z8U=" crossorigin="anonymous"></script>
     <script src="js/dashboard.js"></script>
     <script>
         function formatDate(dateString) {
