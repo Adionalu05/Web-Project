@@ -12,6 +12,7 @@ if ($auth->isAuthenticated()) {
 $message = '';
 $messageType = '';
 $sent = false;
+$resetLinkFallback = null; // shown on-screen when SMTP is unavailable
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = trim($_POST['email'] ?? '');
@@ -55,7 +56,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                          <p><a href=\"{$resetLink}\">{$resetLink}</a></p>
                          <p>If you did not request this, you can ignore this email.</p>";
 
-                sendEmail($email, $subject, $body);
+                $emailSent = sendEmail($email, $subject, $body);
+
+                // Log the reset link regardless (useful for local dev without SMTP)
+                $logLine = '[' . date('Y-m-d H:i:s') . '] Reset link for ' . $email . ': ' . $resetLink . PHP_EOL;
+                @file_put_contents(__DIR__ . '/data/mail.log', $logLine, FILE_APPEND);
+
+                // If mail() failed (no SMTP on localhost), expose the link on-screen
+                if (!$emailSent) {
+                    $resetLinkFallback = $resetLink;
+                }
             }
 
             // Always show the same message to avoid user enumeration
@@ -84,6 +94,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="alert alert-success">
                     If an account with that email exists, a password reset link has been sent. Check your inbox.
                 </div>
+
+                <?php if ($resetLinkFallback): ?>
+                    <div class="alert alert-info" style="margin-top:1rem;word-break:break-all;">
+                        <strong>Dev mode — SMTP not configured.</strong><br>
+                        Use this link to reset your password:<br><br>
+                        <a href="<?php echo htmlspecialchars($resetLinkFallback); ?>">
+                            <?php echo htmlspecialchars($resetLinkFallback); ?>
+                        </a>
+                    </div>
+                <?php endif; ?>
+
                 <p class="auth-link"><a href="login.php">Back to Login</a></p>
 
             <?php else: ?>
