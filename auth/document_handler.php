@@ -13,7 +13,7 @@ class DocumentHandler {
     /**
      * Upload a file
      */
-    public function uploadFile($title, $category_id, $tags, $file) {
+    public function uploadFile($title, $category_id, $tags, $file, $folder_id = null) {
         $userId = $this->auth->getCurrentUserId();
 
         if (!$userId) {
@@ -59,18 +59,19 @@ class DocumentHandler {
 
             // Save document metadata to database
             $stmt = $this->db->prepare("
-                INSERT INTO documents (user_id, title, category_id, file_path, file_name, file_size, file_format, description)
-                VALUES (:user_id, :title, :category_id, :file_path, :file_name, :file_size, :file_format, :description)
+                INSERT INTO documents (user_id, title, category_id, file_path, file_name, file_size, file_format, description, folder_id)
+                VALUES (:user_id, :title, :category_id, :file_path, :file_name, :file_size, :file_format, :description, :folder_id)
             ");
             $stmt->execute([
-                'user_id' => $userId,
-                'title' => $title,
+                'user_id'     => $userId,
+                'title'       => $title,
                 'category_id' => $category_id ?: null,
-                'file_path' => $filePath,
-                'file_name' => $fileName,
-                'file_size' => $file['size'],
+                'file_path'   => $filePath,
+                'file_name'   => $fileName,
+                'file_size'   => $file['size'],
                 'file_format' => $fileExtension,
-                'description' => $_POST['description'] ?? null
+                'description' => $_POST['description'] ?? null,
+                'folder_id'   => $folder_id ?: null,
             ]);
 
             $documentId = $this->db->lastInsertId();
@@ -306,6 +307,188 @@ class DocumentHandler {
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
             return [];
+        }
+    }
+
+    /**
+     * Create a folder
+     */
+    public function createFolder($name, $parentId = null) {
+        $userId = $this->auth->getCurrentUserId();
+        if (!$userId) return ['success' => false, 'error' => 'User not authenticated'];
+        if (empty(trim($name))) return ['success' => false, 'error' => 'Folder name is required'];
+
+        try {
+            $stmt = $this->db->prepare("INSERT INTO folders (name, user_id, parent_id) VALUES (:name, :user_id, :parent_id)");
+            $stmt->execute(['name' => trim($name), 'user_id' => $userId, 'parent_id' => $parentId ?: null]);
+            return ['success' => true, 'folder_id' => $this->db->lastInsertId(), 'message' => 'Folder created'];
+        } catch (Exception $e) {
+            return ['success' => false, 'error' => 'Database error: ' . $e->getMessage()];
+        }
+    }
+
+    /**
+     * Get all folders for current user
+     */
+    public function getFolders() {
+        $userId = $this->auth->getCurrentUserId();
+        if (!$userId) return [];
+        try {
+            $stmt = $this->db->prepare("SELECT * FROM folders WHERE user_id = :user_id ORDER BY name");
+            $stmt->execute(['user_id' => $userId]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            return [];
+        }
+    }
+
+    /**
+     * Get documents inside a folder (owned + shared with user)
+     */
+    public function getFolderDocuments($folderId) {
+        $userId = $this->auth->getCurrentUserId();
+        if (!$userId) return [];
+        try {
+            $stmt = $this->db->prepare("
+                SELECT d.*, c.name as category_name, GROUP_CONCAT(t.name, ', ') as tags
+                FROM documents d
+                LEFT JOIN categories c ON d.category_id = c.id
+                LEFT JOIN document_tags dt ON d.id = dt.document_id
+                LEFT JOIN tags t ON dt.tag_id = t.id
+                WHERE d.folder_id = :folder_id
+                  AND (d.user_id = :user_id OR d.id IN (
+                        SELECT document_id FROM shares WHERE shared_with_user_id = :user_id2
+                  ))
+                GROUP BY d.id ORDER BY d.uploaded_at DESC
+            ");
+            $stmt->execute(['folder_id' => $folderId, 'user_id' => $userId, 'user_id2' => $userId]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            return [];
+        }
+    }
+
+    /**
+     * Share a document with another user by username
+     */
+    public function shareDocument($documentId, $targetUsername) {
+        $userId = $this->auth->getCurrentUserId();
+        if (!$userId) return ['success' => false, 'error' => 'User not authenticated'];
+
+        try {
+            // Verify ownership
+            $stmt = $this->db->prepare("SELECT id FROM documents WHERE id = :id AND user_id = :user_id");
+            $stmt->execute(['id' => $documentId, 'user_id' => $userId]);
+            if (!$stmt->fetch()) return ['success' => false, 'error' => 'Document not found'];
+
+            // Resolve target user
+            $stmt = $this->db->prepare("SELECT id FROM users WHERE username = :username");
+            $stmt->execute(['username' => $targetUsername]);
+            $target = $stmt->fetch(PDO::FETCH_ASSOC);
+            if (!$target) return ['success' => false, 'error' => 'User not found'];
+            if ($target['id'] == $userId) return ['success' => false, 'error' => 'Cannot share with yourself'];
+
+            // Insert share
+            $stmt = $this->db->prepare("
+                INSERT OR IGNORE INTO shares (document_id, owner_id, shared_with_user_id)
+                VALUES (:document_id, :owner_id, :shared_with)
+            ");
+            $stmt->execute(['document_id' => $documentId, 'owner_id' => $userId, 'shared_with' => $target['id']]);
+            return ['success' => true, 'message' => 'Document shared with ' . htmlspecialchars($targetUsername)];
+        } catch (Exception $e) {
+            return ['success' => false, 'error' => 'Database error: ' . $e->getMessage()];
+        }
+    }
+
+    /**
+     * Get documents shared with the current user
+     */
+    public function getSharedDocuments() {
+        $userId = $this->auth->getCurrentUserId();
+        if (!$userId) return [];
+        try {
+            $stmt = $this->db->prepare("
+                SELECT d.*, c.name as category_name, GROUP_CONCAT(t.name, ', ') as tags,
+                       u.username as owner_username
+                FROM documents d
+                JOIN shares s ON d.id = s.document_id
+                JOIN users u ON d.user_id = u.id
+                LEFT JOIN categories c ON d.category_id = c.id
+                LEFT JOIN document_tags dt ON d.id = dt.document_id
+                LEFT JOIN tags t ON dt.tag_id = t.id
+                WHERE s.shared_with_user_id = :user_id
+                GROUP BY d.id ORDER BY s.created_at DESC
+            ");
+            $stmt->execute(['user_id' => $userId]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            return [];
+        }
+    }
+
+    /**
+     * Rerank search results using Claude API
+     */
+    public function aiRerank($query, $documents) {
+        if (empty(CLAUDE_API_KEY) || empty($documents)) return $documents;
+
+        try {
+            $docList = '';
+            foreach ($documents as $d) {
+                $docList .= "{$d['id']}: {$d['title']} [{$d['category_name']}] tags: {$d['tags']}\n";
+            }
+
+            $payload = json_encode([
+                'model' => 'claude-haiku-4-5-20251001',
+                'max_tokens' => 256,
+                'messages' => [[
+                    'role' => 'user',
+                    'content' => "Search query: \"{$query}\"\n\nDocuments:\n{$docList}\nReturn ONLY the document IDs in order of relevance, comma-separated (e.g. 3,1,2). Include all IDs."
+                ]]
+            ]);
+
+            $ch = curl_init('https://api.anthropic.com/v1/messages');
+            curl_setopt_array($ch, [
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_POST => true,
+                CURLOPT_POSTFIELDS => $payload,
+                CURLOPT_HTTPHEADER => [
+                    'Content-Type: application/json',
+                    'x-api-key: ' . CLAUDE_API_KEY,
+                    'anthropic-version: 2023-06-01'
+                ],
+                CURLOPT_TIMEOUT => 8
+            ]);
+
+            $response = curl_exec($ch);
+            curl_close($ch);
+
+            if (!$response) return $documents;
+
+            $data = json_decode($response, true);
+            $text = trim($data['content'][0]['text'] ?? '');
+
+            // Parse comma-separated IDs
+            $orderedIds = array_filter(array_map('intval', explode(',', $text)));
+            if (empty($orderedIds)) return $documents;
+
+            // Reorder documents by returned ID order
+            $indexed = [];
+            foreach ($documents as $d) $indexed[$d['id']] = $d;
+
+            $reranked = [];
+            foreach ($orderedIds as $id) {
+                if (isset($indexed[$id])) {
+                    $reranked[] = $indexed[$id];
+                    unset($indexed[$id]);
+                }
+            }
+            // Append any remaining docs not in the AI response
+            foreach ($indexed as $d) $reranked[] = $d;
+
+            return $reranked;
+        } catch (Exception $e) {
+            return $documents;
         }
     }
 

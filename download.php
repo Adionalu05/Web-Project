@@ -16,16 +16,28 @@ if (!$documentId) {
     exit;
 }
 
-$document = $documentHandler->getDocumentById($documentId);
+$userId = $auth->getCurrentUserId();
 
-if (!$document) {
-    http_response_code(404);
-    echo 'Document not found';
+// Allow access if user owns the document OR it has been shared with them
+try {
+    $stmt = $db->prepare("
+        SELECT d.*, d.user_id
+        FROM documents d
+        WHERE d.id = :id
+          AND (
+            d.user_id = :uid
+            OR d.id IN (SELECT document_id FROM shares WHERE shared_with_user_id = :uid2)
+          )
+    ");
+    $stmt->execute(['id' => $documentId, 'uid' => $userId, 'uid2' => $userId]);
+    $document = $stmt->fetch(PDO::FETCH_ASSOC);
+} catch (Exception $e) {
+    http_response_code(500);
+    echo 'Server error';
     exit;
 }
 
-// Enforce ownership
-if ($document['user_id'] !== $auth->getCurrentUserId()) {
+if (!$document) {
     http_response_code(403);
     echo 'Access denied';
     exit;

@@ -5,6 +5,12 @@ require_once __DIR__ . '/auth/auth.php';
 $message = '';
 $messageType = '';
 
+// Show success after password reset
+if (isset($_GET['reset']) && $_GET['reset'] === '1') {
+    $message = 'Password reset successfully. You can now log in with your new password.';
+    $messageType = 'success';
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = $_POST['username'] ?? '';
     $password = $_POST['password'] ?? '';
@@ -62,6 +68,9 @@ if ($auth->isAuthenticated()) {
             
             <p class="auth-link">
                 Don't have an account? <a href="register.php">Register here</a>
+            </p>
+            <p class="auth-link">
+                <a href="forgot_password.php">Forgot your password?</a>
             </p>
         </div>
     </div>

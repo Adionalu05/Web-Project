@@ -133,6 +133,56 @@ function initializeDatabase($db) {
         )
     ");
 
+    // Folders table
+    $db->exec("
+        CREATE TABLE IF NOT EXISTS folders (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            user_id INTEGER NOT NULL,
+            parent_id INTEGER DEFAULT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+            FOREIGN KEY (parent_id) REFERENCES folders(id) ON DELETE SET NULL
+        )
+    ");
+
+    // Shares table
+    $db->exec("
+        CREATE TABLE IF NOT EXISTS shares (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            document_id INTEGER NOT NULL,
+            owner_id INTEGER NOT NULL,
+            shared_with_user_id INTEGER NOT NULL,
+            permission TEXT DEFAULT 'read',
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(document_id, shared_with_user_id),
+            FOREIGN KEY (document_id) REFERENCES documents(id) ON DELETE CASCADE,
+            FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE CASCADE,
+            FOREIGN KEY (shared_with_user_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+    ");
+
+    // Password resets table
+    $db->exec("
+        CREATE TABLE IF NOT EXISTS password_resets (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            email_hash TEXT NOT NULL,
+            token TEXT UNIQUE NOT NULL,
+            expires_at DATETIME NOT NULL,
+            used INTEGER DEFAULT 0,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+    ");
+
+    // Add folder_id column to documents if it doesn't exist
+    try {
+        $db->exec("ALTER TABLE documents ADD COLUMN folder_id INTEGER DEFAULT NULL");
+    } catch (Exception $e) {
+        // Column already exists
+    }
+
     // Insert default categories
     $db->exec("
         INSERT OR IGNORE INTO categories (id, name, description) VALUES
@@ -150,6 +200,9 @@ initializeDatabase($db);
 define('MAX_FILE_SIZE', 10 * 1024 * 1024); // 10 MB
 define('ALLOWED_FILE_TYPES', ['pdf', 'docx', 'doc', 'jpg', 'jpeg', 'png', 'txt', 'xlsx', 'xls']);
 define('SESSION_TIMEOUT', 24 * 60 * 60); // 24 hours
+
+// Claude API key for AI search (set via environment variable or replace empty string)
+define('CLAUDE_API_KEY', getenv('CLAUDE_API_KEY') ?: '');
 
 // Encryption settings (used for sensitive data at rest)
 // In production, set ENCRYPTION_KEY via environment variable and keep it secret.

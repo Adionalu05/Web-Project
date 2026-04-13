@@ -329,6 +329,88 @@ body {
     }
 }
 
+/* Tab Bar */
+.tab-bar {
+    display: flex;
+    gap: .5rem;
+    margin-bottom: 1.25rem;
+    border-bottom: 2px solid #ecf0f1;
+    padding-bottom: .5rem;
+}
+
+.tab-btn {
+    background: none;
+    border: none;
+    padding: .5rem 1.25rem;
+    cursor: pointer;
+    font-size: 1rem;
+    color: #666;
+    border-radius: 4px 4px 0 0;
+    transition: all .2s;
+}
+
+.tab-btn:hover { background: #ecf0f1; color: #2c3e50; }
+.tab-btn.active { background: #3498db; color: white; }
+
+/* Folder List */
+.folder-item {
+    padding: .5rem .75rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: .9rem;
+    transition: background .2s;
+    user-select: none;
+}
+
+.folder-item:hover { background: #ecf0f1; }
+.folder-item.active { background: #3498db; color: white; }
+
+/* Modal Overlay */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.45);
+    z-index: 900;
+}
+
+.modal-overlay.open { display: block; }
+
+/* Modal Box */
+.modal-box {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.25);
+    width: 100%;
+    max-width: 480px;
+    z-index: 1000;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-box.open { display: block; }
+
+.modal-box h3 {
+    margin-bottom: 1rem;
+    color: #2c3e50;
+    border-bottom: 2px solid #3498db;
+    padding-bottom: .5rem;
+}
+
+/* Success button */
+.btn-success {
+    background-color: #27ae60;
+    color: white;
+}
+
+.btn-success:hover { background-color: #219a52; }
+
 /* Landing Page Styles */
 .landing-navbar {
     position: fixed;

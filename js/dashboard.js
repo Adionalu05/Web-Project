@@ -1,94 +1,340 @@
 
-// 
+// File icon map
+const FILE_ICONS = {
+    pdf: '📄', doc: '📝', docx: '📝',
+    xls: '📊', xlsx: '📊', txt: '📃',
+    jpg: '🖼️', jpeg: '🖼️', png: '🖼️'
+};
 
+function getFileIcon(ext) {
+    return FILE_ICONS[ext.toLowerCase()] || '📎';
+}
 
-$(document).ready(function() {
-    // Handle file upload using AJAX
-    $('#uploadForm').on('submit', function(e) {
+// ─── Upload ───────────────────────────────────────────────────────────────────
+
+$(document).ready(function () {
+    $('#uploadForm').on('submit', function (e) {
         e.preventDefault();
 
-        const $messageEl = $('#uploadMessage');
-        const file = $('#file')[0].files[0];
-        const title = $('#title').val().trim();
-        const category_id = $('#category_upload').val();
-        const tags = $('#tags').val().trim();
+        const $msg   = $('#uploadMessage');
+        const file   = $('#file')[0].files[0];
+        const title  = $('#title').val().trim();
 
-        if (!file) {
-            showMessage($messageEl, 'Please select a file', 'error');
-            return;
-        }
+        if (!file) { showMessage($msg, 'Please select a file', 'error'); return; }
+        if (file.size > 10 * 1024 * 1024) { showMessage($msg, 'File size exceeds 10 MB limit', 'error'); return; }
 
-        if (file.size > 10 * 1024 * 1024) {
-            
-            showMessage($messageEl, 'File size exceeds 10 MB limit', 'error');
-            return;
-        }
-
-        const formData = new FormData();
-        formData.append('action', 'upload');
-        formData.append('title', title);
-        formData.append('category_id', category_id);
-        formData.append('tags', tags);
-        formData.append('file', file);
+        const fd = new FormData();
+        fd.append('action', 'upload');
+        fd.append('title', title);
+        fd.append('category_id', $('#category_upload').val());
+        fd.append('folder_id', $('#upload_folder').val());
+        fd.append('tags', $('#tags').val().trim());
+        fd.append('file', file);
 
         $.ajax({
             url: 'api/handle.php',
             method: 'POST',
-            data: formData,
+            data: fd,
             processData: false,
             contentType: false,
             dataType: 'json'
-        }).done(function(data) {
+        }).done(function (data) {
             if (data.success) {
-                showMessage($messageEl, data.message, 'success');
+                showMessage($msg, data.message, 'success');
                 $('#uploadForm')[0].reset();
-                setTimeout(function() {
-                    location.reload();
-                }, 1500);
+                setTimeout(() => location.reload(), 1500);
             } else {
-                showMessage($messageEl, data.error, 'error');
+                showMessage($msg, data.error, 'error');
             }
-        }).fail(function(xhr, status, error) {
-            showMessage($messageEl, 'An error occurred: ' + error, 'error');
+        }).fail(function (xhr, status, error) {
+            showMessage($msg, 'An error occurred: ' + error, 'error');
         });
+    });
+
+    // Load shared documents when tab is first opened
+    $('#tabShared').on('click', function () {
+        const container = $('#sharedContainer');
+        if (container.data('loaded')) return;
+        loadSharedDocuments();
     });
 });
 
+// ─── Delete ──────────────────────────────────────────────────────────────────
+
 function deleteDocument(documentId) {
-    if (!confirm('Are you sure you want to delete this document? This action cannot be undone.')) {
-        return;
-    }
+    if (!confirm('Are you sure you want to delete this document? This action cannot be undone.')) return;
 
     $.ajax({
         url: 'api/handle.php',
         method: 'POST',
-        data: {
-            action: 'delete',
-            document_id: documentId
-        },
+        data: { action: 'delete', document_id: documentId },
         dataType: 'json'
-    }).done(function(data) {
+    }).done(function (data) {
         if (data.success) {
             alert(data.message);
             location.reload();
         } else {
             alert('Error: ' + data.error);
         }
-    }).fail(function(xhr, status, error) {
+    }).fail(function (xhr, status, error) {
         alert('An error occurred: ' + error);
     });
 }
+
+// ─── Filters ─────────────────────────────────────────────────────────────────
 
 function applyFilters() {
     document.getElementById('filterForm').submit();
 }
 
-function showMessage(element, message, type) {
-    const $el = $(element);
-    $el.html(`<div class="alert alert-${type}">${message}</div>`);
-    if (type === 'success') {
-        setTimeout(function() {
-            $el.html('');
-        }, 5000);
+// ─── Tabs ─────────────────────────────────────────────────────────────────────
+
+function switchTab(tab) {
+    if (tab === 'my') {
+        $('#panelMyDocs').show();
+        $('#panelShared').hide();
+        $('#tabMyDocs').addClass('active');
+        $('#tabShared').removeClass('active');
+    } else {
+        $('#panelMyDocs').hide();
+        $('#panelShared').show();
+        $('#tabMyDocs').removeClass('active');
+        $('#tabShared').addClass('active');
+        const container = $('#sharedContainer');
+        if (!container.data('loaded')) loadSharedDocuments();
     }
+}
+
+function loadSharedDocuments() {
+    $.ajax({
+        url: 'api/handle.php?action=get_shared_documents',
+        method: 'GET',
+        dataType: 'json'
+    }).done(function (data) {
+        const container = $('#sharedContainer');
+        if (!data.success || !data.documents.length) {
+            container.html('<div class="empty-state"><p>No documents have been shared with you yet.</p></div>');
+        } else {
+            container.html(buildDocumentsTable(data.documents, true));
+        }
+        container.data('loaded', true);
+    }).fail(function () {
+        $('#sharedContainer').html('<div class="alert alert-error">Failed to load shared documents.</div>');
+    });
+}
+
+// ─── Folders ─────────────────────────────────────────────────────────────────
+
+function loadFolder(folderId, el) {
+    // Highlight active folder
+    document.querySelectorAll('.folder-item').forEach(function (e) { e.classList.remove('active'); });
+    if (el) el.classList.add('active');
+
+    $.ajax({
+        url: 'api/handle.php?action=get_folder_documents&folder_id=' + folderId,
+        method: 'GET',
+        dataType: 'json'
+    }).done(function (data) {
+        if (data.success) {
+            $('#documentsContainer').html(
+                data.documents.length
+                    ? buildDocumentsTable(data.documents, false)
+                    : '<div class="empty-state"><p>This folder is empty.</p></div>'
+            );
+        }
+    });
+}
+
+function loadAllDocuments() {
+    document.querySelectorAll('.folder-item').forEach(function (e) { e.classList.remove('active'); });
+    $.ajax({
+        url: 'api/handle.php?action=get_documents',
+        method: 'GET',
+        dataType: 'json'
+    }).done(function (data) {
+        if (data.success) {
+            $('#documentsContainer').html(
+                data.documents.length
+                    ? buildDocumentsTable(data.documents, false)
+                    : '<div class="empty-state"><p>No documents found. Start by uploading a file!</p></div>'
+            );
+        }
+    });
+}
+
+function openNewFolderModal() {
+    $('#new_folder_name').val('');
+    $('#folderMessage').html('');
+    openModal('folderModalOverlay');
+}
+
+function submitNewFolder() {
+    const name = $('#new_folder_name').val().trim();
+    if (!name) { showMessage($('#folderMessage'), 'Please enter a folder name.', 'error'); return; }
+
+    $.ajax({
+        url: 'api/handle.php',
+        method: 'POST',
+        data: { action: 'create_folder', name: name },
+        dataType: 'json'
+    }).done(function (data) {
+        if (data.success) {
+            closeModal('folderModalOverlay');
+            location.reload();
+        } else {
+            showMessage($('#folderMessage'), data.error, 'error');
+        }
+    });
+}
+
+// ─── Edit Document ────────────────────────────────────────────────────────────
+
+function openEditModal(id, title, categoryId, tags, description) {
+    $('#edit_doc_id').val(id);
+    $('#edit_title').val(title);
+    $('#edit_category').val(categoryId || '');
+    $('#edit_tags').val(tags);
+    $('#edit_description').val(description);
+    $('#editMessage').html('');
+    openModal('editModalOverlay');
+}
+
+$('#editForm').on('submit', function (e) {
+    e.preventDefault();
+    $.ajax({
+        url: 'api/handle.php',
+        method: 'POST',
+        data: {
+            action:      'edit_document',
+            document_id: $('#edit_doc_id').val(),
+            title:       $('#edit_title').val(),
+            category_id: $('#edit_category').val(),
+            tags:        $('#edit_tags').val(),
+            description: $('#edit_description').val()
+        },
+        dataType: 'json'
+    }).done(function (data) {
+        if (data.success) {
+            closeModal('editModalOverlay');
+            location.reload();
+        } else {
+            showMessage($('#editMessage'), data.error, 'error');
+        }
+    }).fail(function () {
+        showMessage($('#editMessage'), 'Request failed.', 'error');
+    });
+});
+
+// ─── Share Document ───────────────────────────────────────────────────────────
+
+function openShareModal(docId) {
+    $('#share_doc_id').val(docId);
+    $('#share_username').val('');
+    $('#shareMessage').html('');
+    openModal('shareModalOverlay');
+}
+
+function submitShare() {
+    const docId    = $('#share_doc_id').val();
+    const username = $('#share_username').val().trim();
+    if (!username) { showMessage($('#shareMessage'), 'Please enter a username.', 'error'); return; }
+
+    $.ajax({
+        url: 'api/handle.php',
+        method: 'POST',
+        data: { action: 'share_document', document_id: docId, username: username },
+        dataType: 'json'
+    }).done(function (data) {
+        if (data.success) {
+            showMessage($('#shareMessage'), data.message, 'success');
+            setTimeout(function () { closeModal('shareModalOverlay'); }, 1500);
+        } else {
+            showMessage($('#shareMessage'), data.error, 'error');
+        }
+    }).fail(function () {
+        showMessage($('#shareMessage'), 'Request failed.', 'error');
+    });
+}
+
+// ─── Modal Helpers ────────────────────────────────────────────────────────────
+
+function openModal(overlayId) {
+    const overlay = document.getElementById(overlayId);
+    const box = overlay.nextElementSibling;
+    overlay.classList.add('open');
+    box.classList.add('open');
+}
+
+function closeModal(overlayId) {
+    const overlay = document.getElementById(overlayId);
+    const box = overlay.nextElementSibling;
+    overlay.classList.remove('open');
+    box.classList.remove('open');
+}
+
+// ─── Table Builder ────────────────────────────────────────────────────────────
+
+function buildDocumentsTable(docs, isShared) {
+    let html = '<table class="documents-table"><thead><tr>' +
+        '<th>Type</th><th>Title</th><th>Category</th><th>Tags</th><th>Size</th><th>Uploaded</th>';
+    html += isShared ? '<th>Shared By</th>' : '';
+    html += '<th>Actions</th></tr></thead><tbody>';
+
+    docs.forEach(function (doc) {
+        const icon     = getFileIcon(doc.file_format || '');
+        const tagsArr  = doc.tags ? doc.tags.split(', ').map(function (t) { return '<span class="tag">' + esc(t.trim()) + '</span>'; }).join('') : '—';
+        const tagsHtml = doc.tags ? '<div class="tags">' + tagsArr + '</div>' : tagsArr;
+        const size     = formatSize(doc.file_size);
+        const date     = formatDate(doc.uploaded_at);
+
+        html += '<tr>';
+        html += '<td style="font-size:1.4rem;text-align:center;">' + icon + '</td>';
+        html += '<td>' + esc(doc.title) + '</td>';
+        html += '<td>' + esc(doc.category_name || 'N/A') + '</td>';
+        html += '<td>' + tagsHtml + '</td>';
+        html += '<td>' + size + '</td>';
+        html += '<td>' + date + '</td>';
+        if (isShared) html += '<td>' + esc(doc.owner_username || '') + '</td>';
+        html += '<td>';
+        html += '<a href="download.php?doc_id=' + doc.id + '" class="btn btn-small btn-primary">Download</a> ';
+        if (!isShared) {
+            html += '<button class="btn btn-small btn-secondary" onclick=\'openEditModal(' + doc.id + ', "' + esc(doc.title) + '", ' + (doc.category_id || 0) + ', "' + esc(doc.tags || '') + '", "' + esc(doc.description || '') + '")\'>Edit</button> ';
+            html += '<button class="btn btn-small btn-success" onclick="openShareModal(' + doc.id + ')">Share</button> ';
+            html += '<button class="btn btn-small btn-danger" onclick="deleteDocument(' + doc.id + ')">Delete</button>';
+        }
+        html += '</td></tr>';
+    });
+
+    html += '</tbody></table>';
+    return html;
+}
+
+// ─── Utilities ────────────────────────────────────────────────────────────────
+
+function showMessage(element, message, type) {
+    $(element).html('<div class="alert alert-' + type + '">' + message + '</div>');
+    if (type === 'success') {
+        setTimeout(function () { $(element).html(''); }, 5000);
+    }
+}
+
+function esc(str) {
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+function formatSize(bytes) {
+    const units = ['B', 'KB', 'MB', 'GB'];
+    let i = 0;
+    while (bytes >= 1024 && i < units.length - 1) { bytes /= 1024; i++; }
+    return Math.round(bytes * 100) / 100 + ' ' + units[i];
+}
+
+function formatDate(dateStr) {
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 }

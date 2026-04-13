@@ -215,7 +215,7 @@ class Auth {
 $auth = new Auth($db);
 
 // Redirect to login if not authenticated (exception for specific pages)
-$public_pages = ['login.php', 'register.php', 'index.php'];
+$public_pages = ['login.php', 'register.php', 'index.php', 'forgot_password.php', 'reset_password.php'];
 $current_page = basename($_SERVER['PHP_SELF']);
 
 if (!in_array($current_page, $public_pages)) {

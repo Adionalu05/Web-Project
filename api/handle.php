@@ -26,24 +26,18 @@ if (!$auth->isAuthenticated()) {
 }
 
 switch ($action) {
-    case 'upload':
-        handleUpload();
-        break;
-    case 'get_documents':
-        getDocuments();
-        break;
-    case 'search':
-        searchDocuments();
-        break;
-    case 'delete':
-        deleteDocument();
-        break;
-    case 'get_tags':
-        getTags();
-        break;
-    case 'get_categories':
-        getCategories();
-        break;
+    case 'upload':           handleUpload();           break;
+    case 'get_documents':    getDocuments();           break;
+    case 'search':           searchDocuments();        break;
+    case 'delete':           deleteDocument();         break;
+    case 'get_tags':         getTags();                break;
+    case 'get_categories':   getCategories();          break;
+    case 'edit_document':    editDocument();           break;
+    case 'create_folder':    createFolder();           break;
+    case 'get_folders':      getFolders();             break;
+    case 'get_folder_documents': getFolderDocuments(); break;
+    case 'share_document':   shareDocument();          break;
+    case 'get_shared_documents': getSharedDocuments(); break;
     default:
         http_response_code(400);
         echo json_encode(['success' => false, 'error' => 'Invalid action']);
@@ -67,8 +61,9 @@ function handleUpload() {
     $title = $_POST['title'] ?? '';
     $category_id = $_POST['category_id'] ?? null;
     $tags = $_POST['tags'] ?? '';
+    $folder_id = $_POST['folder_id'] ?? null;
 
-    $result = $documentHandler->uploadFile($title, $category_id, $tags, $_FILES['file']);
+    $result = $documentHandler->uploadFile($title, $category_id, $tags, $_FILES['file'], $folder_id);
     echo json_encode($result);
 }
 
@@ -103,14 +98,14 @@ function searchDocuments() {
     }
 
     $filters = [];
-    if (!empty($category_id)) {
-        $filters['category_id'] = $category_id;
-    }
-    if (!empty($tag)) {
-        $filters['tag'] = $tag;
-    }
+    if (!empty($category_id)) $filters['category_id'] = $category_id;
+    if (!empty($tag))         $filters['tag'] = $tag;
 
     $documents = $documentHandler->searchDocuments($searchTerm, $filters);
+
+    // AI reranking via Claude API (falls back gracefully if unavailable)
+    $documents = $documentHandler->aiRerank($searchTerm, $documents);
+
     echo json_encode(['success' => true, 'documents' => $documents]);
 }
 
@@ -143,8 +138,71 @@ function getTags() {
 
 function getCategories() {
     global $documentHandler;
-
     $categories = $documentHandler->getAllCategories();
     echo json_encode(['success' => true, 'categories' => $categories]);
+}
+
+function editDocument() {
+    global $documentHandler;
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        http_response_code(405);
+        echo json_encode(['success' => false, 'error' => 'Method not allowed']);
+        return;
+    }
+    $id          = $_POST['document_id'] ?? null;
+    $title       = $_POST['title'] ?? '';
+    $category_id = $_POST['category_id'] ?? null;
+    $tags        = $_POST['tags'] ?? '';
+    $description = $_POST['description'] ?? '';
+
+    if (!$id) { echo json_encode(['success' => false, 'error' => 'Document ID required']); return; }
+
+    $result = $documentHandler->updateDocumentMetadata($id, $title, $category_id, $tags, $description);
+    echo json_encode($result);
+}
+
+function createFolder() {
+    global $documentHandler;
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        http_response_code(405);
+        echo json_encode(['success' => false, 'error' => 'Method not allowed']);
+        return;
+    }
+    $name     = $_POST['name'] ?? '';
+    $parentId = $_POST['parent_id'] ?? null;
+    echo json_encode($documentHandler->createFolder($name, $parentId));
+}
+
+function getFolders() {
+    global $documentHandler;
+    echo json_encode(['success' => true, 'folders' => $documentHandler->getFolders()]);
+}
+
+function getFolderDocuments() {
+    global $documentHandler;
+    $folderId = $_GET['folder_id'] ?? null;
+    if (!$folderId) { echo json_encode(['success' => false, 'error' => 'Folder ID required']); return; }
+    echo json_encode(['success' => true, 'documents' => $documentHandler->getFolderDocuments($folderId)]);
+}
+
+function shareDocument() {
+    global $documentHandler;
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        http_response_code(405);
+        echo json_encode(['success' => false, 'error' => 'Method not allowed']);
+        return;
+    }
+    $documentId     = $_POST['document_id'] ?? null;
+    $targetUsername = trim($_POST['username'] ?? '');
+    if (!$documentId || !$targetUsername) {
+        echo json_encode(['success' => false, 'error' => 'Document ID and username are required']);
+        return;
+    }
+    echo json_encode($documentHandler->shareDocument($documentId, $targetUsername));
+}
+
+function getSharedDocuments() {
+    global $documentHandler;
+    echo json_encode(['success' => true, 'documents' => $documentHandler->getSharedDocuments()]);
 }
 ?>
