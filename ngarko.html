@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="sq">
+<head>
+<meta charset="UTF-8">
+<title>Ngarko Dokument - DMS</title>
+
+<style>
+body{
+margin:0;
+font-family:Arial;
+background:#f4f6fb;
+display:flex;
+}
+
+/* SIDEBAR */
+.sidebar{
+width:230px;
+background:#521e72;
+color:white;
+height:100vh;
+padding:20px;
+}
+
+.sidebar a{
+display:block;
+color:white;
+text-decoration:none;
+margin:15px 0;
+}
+
+/* MAIN */
+.main{
+flex:1;
+}
+
+/* TOPBAR */
+.topbar{
+background:white;
+padding:15px 30px;
+display:flex;
+justify-content:space-between;
+box-shadow:0 2px 10px rgba(0,0,0,0.1);
+}
+
+/* CONTENT */
+.content{
+padding:30px;
+}
+
+/* UPLOAD BOX */
+.upload-box{
+background:white;
+padding:30px;
+border-radius:12px;
+box-shadow:0 5px 15px rgba(0,0,0,0.08);
+max-width:500px;
+}
+
+.upload-box input{
+width:100%;
+margin:10px 0;
+padding:12px;
+border-radius:8px;
+border:1px solid #ccc;
+}
+
+/* BUTTON */
+.btn{
+background:linear-gradient(135deg,#521e72,#7e2a98);
+color:white;
+border:none;
+padding:12px;
+border-radius:25px;
+cursor:pointer;
+width:100%;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="sidebar">
+<h2>DMS</h2>
+<a href="#">Dashboard</a>
+<a href="documents.html">Dokumentet</a>
+<a href="#">Ngarko</a>
+<a href="#">Settings</a>
+</div>
+
+<div class="main">
+
+<div class="topbar">
+<h3>Ngarko Dokument</h3>
+<span>👤 Kejsi</span>
+</div>
+
+<div class="content">
+
+<div class="upload-box">
+
+<h3>Ngarko dokument të ri</h3>
+
+<input type="text" placeholder="Emri i dokumentit">
+<input type="file">
+<input type="date">
+
+<button class="btn">Ngarko</button>
+
+</div>
+
+</div>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="sq">
+<head>
+<meta charset="UTF-8">
+<title>Login - Document Management System</title>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+
+body{
+margin:0;
+font-family:Arial, Helvetica, sans-serif;
+background:linear-gradient(135deg,#521e72,#7e2a98);
+height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+}
+.login-container{
+background:white;
+padding:40px;
+width:380px;
+border-radius:12px;
+box-shadow:0 10px 30px rgba(0,0,0,0.25);
+text-align:center;
+animation:fadeIn 0.6s ease;
+}
+
+@keyframes fadeIn{
+from{opacity:0; transform:translateY(20px);}
+to{opacity:1; transform:translateY(0);}
+}
+
+.logo{
+font-size:22px;
+font-weight:bold;
+color:#521e72;
+margin-bottom:10px;
+}
+
+.login-container h2{
+margin-bottom:25px;
+}
+.input-group{
+margin-bottom:18px;
+text-align:left;
+position:relative;
+}
+.input-group label{
+font-size:14px;
+font-weight:bold;
+display:block;
+margin-bottom:5px;
+}
+.input-group input{
+width:100%;
+padding:12px 40px;
+border:1px solid #ccc;
+border-radius:8px;
+font-size:14px;
+box-sizing:border-box;
+transition:0.3s;
+}
+.input-group i:first-of-type{
+position:absolute;
+left:12px;
+top:37px;
+color:#999;
+}
+.toggle-password{
+position:absolute;
+right:12px;
+top:37px;
+cursor:pointer;
+color:#999;
+}
+.input-group input:focus{
+border-color:#7e2a98;
+outline:none;
+box-shadow:0 0 5px rgba(126,42,152,0.3);
+}
+.options{
+display:flex;
+justify-content:space-between;
+font-size:13px;
+margin-bottom:20px;
+align-items:center;
+}
+.options a{
+text-decoration:none;
+color:#7e2a98;
+font-weight:bold;
+}
+
+.options a:hover{
+text-decoration:underline;
+}
+
+.login-btn{
+width:100%;
+padding:12px;
+border:none;
+border-radius:25px;
+background:linear-gradient(135deg,#521e72,#7e2a98);
+color:white;
+font-size:16px;
+cursor:pointer;
+transition:0.3s;
+}
+
+.login-btn:hover{
+transform:translateY(-2px);
+box-shadow:0 6px 15px rgba(0,0,0,0.2);
+}
+
+.security-note{
+font-size:12px;
+color:#777;
+margin-top:12px;
+}
+
+.register{
+margin-top:20px;
+font-size:14px;
+}
+
+.register a{
+color:#7e2a98;
+font-weight:bold;
+text-decoration:none;
+}
+
+.register a:hover{
+text-decoration:underline;
+}
+
+.back{
+margin-top:15px;
+font-size:13px;
+}
+
+.back a{
+text-decoration:none;
+color:#555;
+}
+
+.back a:hover{
+color:#7e2a98;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="login-container">
+
+<div class="logo">Document Management System</div>
+
+<h2>Login</h2>
+
+<form action="dashboard.html">
+
+<div class="input-group">
+<label>Email</label>
+<i class="fa-solid fa-envelope"></i>
+<input type="email" placeholder="Shkruani emailin" required>
+</div>
+
+<div class="input-group">
+<label>Password</label>
+<i class="fa-solid fa-lock"></i>
+<input type="password" id="password" placeholder="Shkruani passwordin" required>
+<i class="fa-solid fa-eye toggle-password" onclick="togglePassword()"></i>
+</div>
+
+<div class="options">
+<label>
+<input type="checkbox"> Remember me
+</label>
+<a href="forgetpass.html">Forgot password?</a>
+</div>
+
+<button class="login-btn">Login</button>
+
+<p class="security-note">
+Per arsye sigurie, llogaria bllokohet pas 3 perpjekjeve te gabuara.
+</p>
+
+</form>
+
+<div class="register">
+Nuk keni llogari? <a href="register.html">Regjistrohu</a>
+</div>
+
+<div class="back">
+<a href="dms1.html">⬅ Kthehu në faqen kryesore</a>
+</div>
+
+</div>
+
+<script>
+function togglePassword(){
+var pass = document.getElementById("password");
+pass.type = pass.type === "password" ? "text" : "password";
+}
+</script>
+
+</body>
+</html>
