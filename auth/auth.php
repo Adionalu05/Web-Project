@@ -20,7 +20,7 @@ function isSameOriginRequest() {
         return true; // allow direct access (typing URL)
     }
     $refHost = parse_url($_SERVER['HTTP_REFERER'], PHP_URL_HOST);
-    $host = $_SERVER['HTTP_HOST'] ?? '';
+    $host = parse_url('http://' . ($_SERVER['HTTP_HOST'] ?? ''), PHP_URL_HOST);
     return $refHost === $host;
 }
 
