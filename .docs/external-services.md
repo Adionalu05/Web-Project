@@ -1,4 +1,4 @@
-# API Endpoints & External Integrations
+# External Services Integration
 
 ---
 
@@ -168,3 +168,41 @@ Search form (GET ?search=financial)
 ```
 
 If no API key is configured, `aiRerank()` skips the Claude call and returns the SQL results as-is.
+
+---
+
+## Debug Log — External Services
+
+### ✅ PHP extensions missing (openssl, curl, sockets)
+**Date:** 2026-04-14
+**Symptom:** PHPMailer could not establish a TLS connection to Gmail. Claude API cURL calls also silently failing. `data/mail.log` was empty — email was never even attempted.
+**Root cause:** `openssl`, `curl`, and `sockets` were all commented out in `C:\php\php.ini`. PHPMailer requires `openssl` for TLS and `sockets` as a transport. The Claude integration requires `curl` for outbound HTTP requests.
+**Fix:** Uncommented all three lines in `php.ini` and restarted the server:
+```
+extension=curl
+extension=openssl
+extension=sockets
+```
+
+---
+
+### ✅ Gmail app password entered with spaces
+**Date:** 2026-04-14
+**Symptom:** Authentication to `smtp.gmail.com:587` would fail even with a valid app password.
+**Root cause:** Gmail displays the 16-character app password in groups of 4 (e.g. `abcd efgh ijkl mnop`). If copied with spaces into `config/mail.php`, SMTP authentication fails.
+**Fix:** Remove all spaces from the value in `config/mail.php`:
+```php
+define('MAIL_PASSWORD', 'abcdefghijklmnop'); // no spaces
+```
+
+---
+
+### 🔄 Gmail SMTP — pending confirmation
+**Date:** 2026-04-14
+**Status:** Extensions enabled, credentials set. Awaiting live test to confirm emails are delivered end-to-end.
+
+---
+
+### 🔄 Claude AI Search — pending API key
+**Date:** 2026-04-14
+**Status:** Code is implemented and falls back gracefully. Awaiting Anthropic API key to test live reranking.
