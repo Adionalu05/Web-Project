@@ -197,9 +197,9 @@ define('MAIL_PASSWORD', 'abcdefghijklmnop'); // no spaces
 
 ---
 
-### 🔄 Gmail SMTP — pending confirmation
+### ✅ Gmail SMTP — confirmed working
 **Date:** 2026-04-14
-**Status:** Extensions enabled, credentials set. Awaiting live test to confirm emails are delivered end-to-end.
+**Status:** Password reset email delivered successfully end-to-end. PHPMailer → smtp.gmail.com:587 → inbox confirmed.
 
 ---
 
