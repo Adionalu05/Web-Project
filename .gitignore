@@ -3,3 +3,5 @@ config/mail.php
 data/mail.log
 data/documents.db
 uploads/
+seed_demo.php
+demo-files/

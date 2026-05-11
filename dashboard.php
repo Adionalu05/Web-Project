@@ -115,11 +115,23 @@ if ($search) {
                     <div class="folder-item" onclick="loadAllDocuments()">
                         📂 All Documents
                     </div>
-                    <?php foreach ($folders as $folder): ?>
-                        <div class="folder-item" onclick="loadFolder(<?php echo $folder['id']; ?>, this)">
-                            📁 <?php echo htmlspecialchars($folder['name']); ?>
-                        </div>
-                    <?php endforeach; ?>
+                    <?php
+                    // Build a tree and render it with indentation so nested folders are visible
+                    function renderFolderTree($folders, $parentId = null, $depth = 0) {
+                        foreach ($folders as $folder) {
+                            $fp = $folder['parent_id'];
+                            if (($fp === null || $fp === '') ? $parentId === null : (int)$fp === (int)$parentId) {
+                                $pad   = $depth * 14; // px indent per level
+                                $icon  = $depth === 0 ? '📁' : '📂';
+                                $id    = (int)$folder['id'];
+                                $name  = htmlspecialchars($folder['name']);
+                                echo "<div class='folder-item' style='padding-left:{$pad}px' onclick='loadFolder({$id}, this)'>{$icon} {$name}</div>";
+                                renderFolderTree($folders, $folder['id'], $depth + 1);
+                            }
+                        }
+                    }
+                    renderFolderTree($folders);
+                    ?>
                 </div>
                 <button class="btn btn-secondary" style="width:100%;margin-top:.75rem;font-size:.85rem;" onclick="openNewFolderModal()">
                     + New Folder

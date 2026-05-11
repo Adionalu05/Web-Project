@@ -343,19 +343,27 @@ class DocumentHandler {
     }
 
     /**
-     * Get documents inside a folder (owned + shared with user)
+     * Get documents inside a folder and ALL its descendant subfolders (recursive).
+     * Uses a recursive CTE to collect the full subtree of folder IDs first,
+     * then fetches all documents whose folder_id is in that set.
      */
     public function getFolderDocuments($folderId) {
         $userId = $this->auth->getCurrentUserId();
         if (!$userId) return [];
         try {
             $stmt = $this->db->prepare("
+                WITH RECURSIVE subfolder_ids AS (
+                    SELECT id FROM folders WHERE id = :folder_id
+                    UNION ALL
+                    SELECT f.id FROM folders f
+                    INNER JOIN subfolder_ids s ON f.parent_id = s.id
+                )
                 SELECT d.*, c.name as category_name, GROUP_CONCAT(t.name, ', ') as tags
                 FROM documents d
                 LEFT JOIN categories c ON d.category_id = c.id
                 LEFT JOIN document_tags dt ON d.id = dt.document_id
                 LEFT JOIN tags t ON dt.tag_id = t.id
-                WHERE d.folder_id = :folder_id
+                WHERE d.folder_id IN (SELECT id FROM subfolder_ids)
                   AND (d.user_id = :user_id OR d.id IN (
                         SELECT document_id FROM shares WHERE shared_with_user_id = :user_id2
                   ))

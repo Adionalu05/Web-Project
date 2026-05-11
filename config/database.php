@@ -238,7 +238,10 @@ function decryptValue($value) {
         return $value;
     }
 
-    $decoded = base64_decode($value);
+    $decoded = base64_decode($value, true); // strict: returns false for non-base64 (plain-text emails stored before encryption was enabled)
+    if ($decoded === false || strlen($decoded) <= ENCRYPTION_IV_LENGTH) {
+        return $value; // not encrypted, return as-is
+    }
     $iv = substr($decoded, 0, ENCRYPTION_IV_LENGTH);
     $ciphertext = substr($decoded, ENCRYPTION_IV_LENGTH);
 
