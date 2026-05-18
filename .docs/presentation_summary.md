@@ -21,6 +21,87 @@ post_max_size = 12M
 
 ---
 
+## Architecture
+
+### System Overview
+
+```mermaid
+flowchart LR
+    subgraph CLIENT["🌐 Browser"]
+        UI["Pages\ndashboard · login · register\nforgot_password · reset_password"]
+        AJAX["jQuery AJAX\njs/dashboard.js"]
+    end
+
+    subgraph SERVER["⚙️ PHP Server"]
+        API["api/handle.php\n─────────────────\nSingle AJAX entry point\n12 actions · all auth-gated"]
+
+        subgraph CORE["Core Classes"]
+            AUTH["Auth\nauth/auth.php\n──────────────\nRegister · Login · Logout\nSession token validation\nbcrypt · same-origin check"]
+            DH["DocumentHandler\nauth/document_handler.php\n──────────────\nUpload · Search · Edit · Delete\nFolders · Share · aiRerank()"]
+        end
+
+        MAIL["PHPMailer wrapper\nauth/email.php"]
+        CFG["config/database.php\n──────────────\nSchema init\nAES-256-CBC helpers\nClaude API key"]
+    end
+
+    subgraph STORAGE["💾 Storage"]
+        DB[("SQLite\ndocuments.db\n──────────────\n9 tables\nFKs + cascade deletes")]
+        FILES["uploads/\nFiles on disk\ngitignored"]
+    end
+
+    subgraph EXTERNAL["☁️ External Services"]
+        CLAUDE["Anthropic Claude API\nclaude-haiku-4-5-20251001\n──────────────\nAI search reranking\nGraceful fallback if no key"]
+        GMAIL["Gmail SMTP\nsmtp.gmail.com:587\n──────────────\nPassword reset email\nSTARTTLS · App password"]
+    end
+
+    UI --> AJAX
+    AJAX -->|"GET / POST ?action=X"| API
+    API --> AUTH
+    API --> DH
+    API -->|"password reset"| MAIL
+    AUTH <-->|"session tokens"| DB
+    DH <-->|"all queries"| DB
+    DH -->|"read/write files"| FILES
+    DH -->|"cURL · aiRerank()"| CLAUDE
+    MAIL -->|"STARTTLS · port 587"| GMAIL
+    CFG -.->|"schema init"| DB
+```
+
+---
+
+### Request Lifecycle
+
+```mermaid
+sequenceDiagram
+    actor User
+    participant Browser
+    participant api/handle.php
+    participant Auth
+    participant DocumentHandler
+    participant SQLite
+    participant Claude API
+
+    User->>Browser: clicks Search "financial"
+    Browser->>api/handle.php: GET ?action=search&q=financial
+    api/handle.php->>Auth: isAuthenticated()
+    Auth->>SQLite: SELECT sessions WHERE token=? AND expires_at > NOW
+    SQLite-->>Auth: ✅ valid session
+    Auth-->>api/handle.php: user_id = 3
+
+    api/handle.php->>DocumentHandler: searchDocuments("financial")
+    DocumentHandler->>SQLite: SELECT ... WHERE title LIKE '%financial%'
+    SQLite-->>DocumentHandler: [doc3, doc1, doc2]
+
+    DocumentHandler->>Claude API: POST /v1/messages (prompt + doc list)
+    Claude API-->>DocumentHandler: "3,1,2" (reranked IDs)
+    DocumentHandler-->>api/handle.php: [doc3, doc1, doc2] reordered
+
+    api/handle.php-->>Browser: JSON response
+    Browser-->>User: renders reranked results
+```
+
+---
+
 ## Features
 
 - [x] Authentication
