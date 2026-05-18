@@ -506,7 +506,7 @@ Run the seed first if showing the folder demo: `http://localhost:8000/seed_demo.
 
 ### Step 3 — File Upload + Recursive Folder Structure
 
-#### 3a — Seed the demo data
+#### 3.1 — Seed the demo data
 
 **Show:** `http://localhost:8000/seed_demo.php`
 
@@ -530,15 +530,17 @@ The script builds this tree for the current logged-in user:
 
 After it runs, click **← Go to Dashboard**.
 
-#### 3b — Upload a file manually
+![alt text](media/image-7.png)
+
+#### 3.2 — Upload a file manually
 
 **Show:** Dashboard → upload sidebar on the left
 
 Pick any file from `demo-files/` (e.g. `invoice_january.txt`) and upload it with a title and category. The table updates immediately via AJAX — no page reload. Point this out: the form submits in the background and only the table re-renders.
 
-**Talk about:** files are stored with a `uniqid()` generated filename on disk so the original name cannot be guessed or enumerated. Download goes through `download.php` which checks ownership before serving — the raw file path is never exposed in the browser.
+**Talk about:** files are stored with a `uniqid()` generated filename on disk so the original name cannot be guessed or enumerated. Download goes through `download.php` which checks ownership before serving, the raw file path is never exposed in the browser.
 
-#### 3c — Demonstrate recursive folder search
+#### 3.3 — Demonstrate recursive folder search
 
 **Show:** Folder sidebar on the left
 
