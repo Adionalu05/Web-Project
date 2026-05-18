@@ -57,9 +57,9 @@ php -m
 
 Duhet te shohesh ne output: `curl`, `openssl`, `PDO`, `pdo_sqlite`, `sqlite3`.
 
-![alt text](image.png)
+![alt text](../media/image.png)
 
-![alt text](image-1.png)
+![alt text](../media/image-1.png)
 
 ---
 
