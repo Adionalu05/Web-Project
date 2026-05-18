@@ -110,7 +110,7 @@ te shpejte dhe te sigurt duke perdorur nje sistem modern.
 </p>
 </div>
 <div class="hero-image-wrap">
-<img src="media/dms.jpg" alt="Document Management System preview" class="hero-image">
+<img src="dms.jpg" alt="Document Management System preview" class="hero-image">
 </div>
 </section>
 
