@@ -17,6 +17,7 @@ $(document).ready(function () {
         e.preventDefault();
 
         const $msg   = $('#uploadMessage');
+        const $submit = $(this).find('button[type="submit"]');
         const file   = $('#file')[0].files[0];
         const title  = $('#title').val().trim();
 
@@ -30,6 +31,9 @@ $(document).ready(function () {
         fd.append('folder_id', $('#upload_folder').val());
         fd.append('tags', $('#tags').val().trim());
         fd.append('file', file);
+
+        showMessage($msg, 'Uploading document...', 'info');
+        setButtonLoading($submit, true, 'Uploading...');
 
         $.ajax({
             url: 'api/handle.php',
@@ -48,6 +52,8 @@ $(document).ready(function () {
             }
         }).fail(function (xhr, status, error) {
             showMessage($msg, 'An error occurred: ' + error, 'error');
+        }).always(function () {
+            setButtonLoading($submit, false);
         });
     });
 
@@ -106,12 +112,14 @@ function switchTab(tab) {
 }
 
 function loadSharedDocuments() {
+    const container = $('#sharedContainer');
+    container.html(loadingHtml('Loading shared documents...'));
+
     $.ajax({
         url: 'api/handle.php?action=get_shared_documents',
         method: 'GET',
         dataType: 'json'
     }).done(function (data) {
-        const container = $('#sharedContainer');
         if (!data.success || !data.documents.length) {
             container.html('<div class="empty-state"><p>No documents have been shared with you yet.</p></div>');
         } else {
@@ -129,6 +137,7 @@ function loadFolder(folderId, el) {
     // Highlight active folder
     document.querySelectorAll('.folder-item').forEach(function (e) { e.classList.remove('active'); });
     if (el) el.classList.add('active');
+    $('#documentsContainer').html(loadingHtml('Loading folder documents...'));
 
     $.ajax({
         url: 'api/handle.php?action=get_folder_documents&folder_id=' + folderId,
@@ -142,11 +151,15 @@ function loadFolder(folderId, el) {
                     : '<div class="empty-state"><p>This folder is empty.</p></div>'
             );
         }
+    }).fail(function () {
+        $('#documentsContainer').html('<div class="alert alert-error">Failed to load folder documents.</div>');
     });
 }
 
 function loadAllDocuments() {
     document.querySelectorAll('.folder-item').forEach(function (e) { e.classList.remove('active'); });
+    $('#documentsContainer').html(loadingHtml('Loading documents...'));
+
     $.ajax({
         url: 'api/handle.php?action=get_documents',
         method: 'GET',
@@ -159,6 +172,8 @@ function loadAllDocuments() {
                     : '<div class="empty-state"><p>No documents found. Start by uploading a file!</p></div>'
             );
         }
+    }).fail(function () {
+        $('#documentsContainer').html('<div class="alert alert-error">Failed to load documents.</div>');
     });
 }
 
@@ -170,7 +185,11 @@ function openNewFolderModal() {
 
 function submitNewFolder() {
     const name = $('#new_folder_name').val().trim();
+    const $button = $('#folderModal .btn-primary');
     if (!name) { showMessage($('#folderMessage'), 'Please enter a folder name.', 'error'); return; }
+
+    showMessage($('#folderMessage'), 'Creating folder...', 'info');
+    setButtonLoading($button, true, 'Creating...');
 
     $.ajax({
         url: 'api/handle.php',
@@ -184,6 +203,10 @@ function submitNewFolder() {
         } else {
             showMessage($('#folderMessage'), data.error, 'error');
         }
+    }).fail(function () {
+        showMessage($('#folderMessage'), 'Request failed.', 'error');
+    }).always(function () {
+        setButtonLoading($button, false);
     });
 }
 
@@ -201,6 +224,11 @@ function openEditModal(id, title, categoryId, tags, description) {
 
 $('#editForm').on('submit', function (e) {
     e.preventDefault();
+    const $button = $(this).find('button[type="submit"]');
+
+    showMessage($('#editMessage'), 'Saving changes...', 'info');
+    setButtonLoading($button, true, 'Saving...');
+
     $.ajax({
         url: 'api/handle.php',
         method: 'POST',
@@ -222,6 +250,8 @@ $('#editForm').on('submit', function (e) {
         }
     }).fail(function () {
         showMessage($('#editMessage'), 'Request failed.', 'error');
+    }).always(function () {
+        setButtonLoading($button, false);
     });
 });
 
@@ -237,7 +267,11 @@ function openShareModal(docId) {
 function submitShare() {
     const docId    = $('#share_doc_id').val();
     const username = $('#share_username').val().trim();
+    const $button = $('#shareModal .btn-primary');
     if (!username) { showMessage($('#shareMessage'), 'Please enter a username.', 'error'); return; }
+
+    showMessage($('#shareMessage'), 'Sharing document...', 'info');
+    setButtonLoading($button, true, 'Sharing...');
 
     $.ajax({
         url: 'api/handle.php',
@@ -253,6 +287,8 @@ function submitShare() {
         }
     }).fail(function () {
         showMessage($('#shareMessage'), 'Request failed.', 'error');
+    }).always(function () {
+        setButtonLoading($button, false);
     });
 }
 
@@ -337,4 +373,20 @@ function formatSize(bytes) {
 function formatDate(dateStr) {
     const d = new Date(dateStr);
     return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
+function loadingHtml(message) {
+    return '<div class="loading-state"><span class="loading-spinner" aria-hidden="true"></span><span>' + esc(message) + '</span></div>';
+}
+
+function setButtonLoading($button, isLoading, loadingText) {
+    if (!$button.length) return;
+
+    if (isLoading) {
+        $button.data('original-text', $button.html());
+        $button.prop('disabled', true).addClass('btn-loading').html(
+            '<span class="loading-spinner loading-spinner-small" aria-hidden="true"></span>' + esc(loadingText)
+        );
+    } else {
+        $button.prop('disabled', false).removeClass('btn-loading').html($button.data('original-text'));
+    }
 }
