@@ -25,9 +25,13 @@ if ($auth->isAuthenticated()) {
         .btn-login:hover{background:#7c2a98;color:white;}
         .btn-register{text-decoration:none;padding:10px 22px;background:linear-gradient(135deg,#4f1e72,#792a98);border-radius:25px;color:white;font-weight:600;transition:0.3s;}
         .btn-register:hover{transform:translateY(-2px);box-shadow:0 5px 15px rgba(0,0,0,0.2);}
-        .hero{padding:80px 60px;background:linear-gradient(135deg,#521e72,#7e2a98);color:white;}
-        .hero h1{font-size:36px;margin-bottom:15px;}
-        .hero p{max-width:600px;line-height:1.6;}
+        .hero{padding:80px 60px;background:linear-gradient(135deg,#521e72,#7e2a98);color:white;display:flex;align-items:center;justify-content:space-between;gap:45px;overflow:hidden;}
+        .hero-content{max-width:620px;position:relative;z-index:1;}
+        .hero h1{font-size:42px;margin-bottom:18px;line-height:1.15;}
+        .hero p{max-width:600px;line-height:1.7;font-size:17px;}
+        .hero-image-wrap{width:min(460px,42vw);position:relative;z-index:1;}
+        .hero-image-wrap::before{content:"";position:absolute;inset:18px -18px -18px 18px;border:1px solid rgba(255,255,255,0.32);border-radius:24px;}
+        .hero-image{width:100%;height:auto;display:block;border-radius:24px;box-shadow:0 24px 55px rgba(0,0,0,0.35);border:8px solid rgba(255,255,255,0.18);object-fit:cover;}
         .services{padding:60px;text-align:center;}
         .services h2{font-size:28px;margin-bottom:30px;}
         .expand-search{display:flex;align-items:center;background:white;border-radius:50px;padding:10px;width:50px;overflow:hidden;transition:0.4s;margin:40px auto;box-shadow:0 5px 20px rgba(0,0,0,0.1);cursor:pointer;}
@@ -68,6 +72,18 @@ if ($auth->isAuthenticated()) {
         .btn-secondary{border:2px solid white;color:white;padding:12px 25px;border-radius:25px;text-decoration:none;font-weight:bold;transition:0.3s;}
         .btn-secondary:hover{background:white;color:#4e1e72;}
         .cta-image{font-size:100px;opacity:0.2;}
+        @media (max-width: 900px){
+            .hero{padding:70px 30px;flex-direction:column;text-align:center;}
+            .hero p{margin:0 auto;}
+            .hero-image-wrap{width:min(520px,100%);}
+        }
+        @media (max-width: 520px){
+            .navbar{padding:15px 20px;flex-direction:column;gap:14px;}
+            .hero{padding:55px 20px;}
+            .hero h1{font-size:32px;}
+            .hero-image{border-radius:18px;border-width:5px;}
+            .hero-image-wrap::before{border-radius:18px;inset:12px -10px -10px 12px;}
+        }
     </style>
 </head>
 <body>
@@ -86,11 +102,16 @@ Kujdes: Mos ndani kredencialet e llogarise tuaj me persona te paautorizuar.
 </header>
 
 <section class="hero">
+<div class="hero-content">
 <h1>Menaxhoni dokumentet tuaja ne menyre te sigurt</h1>
 <p>
 Platforma jone ju lejon te ngarkoni, organizoni dhe kerkoni dokumente ne menyre
 te shpejte dhe te sigurt duke perdorur nje sistem modern.
 </p>
+</div>
+<div class="hero-image-wrap">
+<img src="dms.jpg" alt="Document Management System preview" class="hero-image">
+</div>
 </section>
 
 <section class="services">
