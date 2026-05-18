@@ -19,20 +19,14 @@ upload_max_filesize = 10M
 post_max_size = 12M
 ```
 
----
-
-## Architecture
-
-### System Overview
-
 ```mermaid
 flowchart LR
-    subgraph CLIENT["🌐 Browser"]
+    subgraph CLIENT["Browser"]
         UI["Pages\ndashboard · login · register\nforgot_password · reset_password"]
         AJAX["jQuery AJAX\njs/dashboard.js"]
     end
 
-    subgraph SERVER["⚙️ PHP Server"]
+    subgraph SERVER["PHP Server"]
         API["api/handle.php\n─────────────────\nSingle AJAX entry point\n12 actions · all auth-gated"]
 
         subgraph CORE["Core Classes"]
@@ -44,12 +38,12 @@ flowchart LR
         CFG["config/database.php\n──────────────\nSchema init\nAES-256-CBC helpers\nClaude API key"]
     end
 
-    subgraph STORAGE["💾 Storage"]
+    subgraph STORAGE["Storage"]
         DB[("SQLite\ndocuments.db\n──────────────\n9 tables\nFKs + cascade deletes")]
         FILES["uploads/\nFiles on disk\ngitignored"]
     end
 
-    subgraph EXTERNAL["☁️ External Services"]
+    subgraph EXTERNAL["External Services"]
         CLAUDE["Anthropic Claude API\nclaude-haiku-4-5-20251001\n──────────────\nAI search reranking\nGraceful fallback if no key"]
         GMAIL["Gmail SMTP\nsmtp.gmail.com:587\n──────────────\nPassword reset email\nSTARTTLS · App password"]
     end
@@ -67,10 +61,6 @@ flowchart LR
     CFG -.->|"schema init"| DB
 ```
 
----
-
-### Request Lifecycle
-
 ```mermaid
 sequenceDiagram
     actor User
@@ -85,7 +75,7 @@ sequenceDiagram
     Browser->>api/handle.php: GET ?action=search&q=financial
     api/handle.php->>Auth: isAuthenticated()
     Auth->>SQLite: SELECT sessions WHERE token=? AND expires_at > NOW
-    SQLite-->>Auth: ✅ valid session
+    SQLite-->>Auth: valid session
     Auth-->>api/handle.php: user_id = 3
 
     api/handle.php->>DocumentHandler: searchDocuments("financial")
@@ -514,21 +504,49 @@ Run the seed first if showing the folder demo: `http://localhost:8000/seed_demo.
 
 ---
 
-### Step 3 — Uploading Files on the Dashboard
+### Step 3 — File Upload + Recursive Folder Structure
+
+#### 3a — Seed the demo data
+
+**Show:** `http://localhost:8000/seed_demo.php`
+
+The seed script is a one-time tool that populates the database with a known folder tree and 8 real `.txt` files in a single request — no manual clicking through the UI. It checks for an active session first, wipes any previous run (files on disk included), then inserts folders and documents programmatically. This is standard practice in web development for setting up reproducible demo states.
+
+The script builds this tree for the current logged-in user:
+
+```
+📁 Demo Project
+  📂 Demo 1
+    📂 Demo 1.1
+      📄 Demo 1.1.1 · Demo 1.1.2
+    📄 Demo 1.2 · Demo 1.3
+  📂 Demo 2
+    📂 Demo 2.1
+      📄 Demo 2.1.1
+    📄 Demo 2.2
+  📂 Demo 3
+    📄 Demo 3.1 · Demo 3.2
+```
+
+After it runs, click **← Go to Dashboard**.
+
+#### 3b — Upload a file manually
 
 **Show:** Dashboard → upload sidebar on the left
 
-Upload the three demo files one by one from `demo-files/`:
+Pick any file from `demo-files/` (e.g. `invoice_january.txt`) and upload it with a title and category. The table updates immediately via AJAX — no page reload. Point this out: the form submits in the background and only the table re-renders.
 
-| File | Title to enter | Category | Tags |
-|------|---------------|----------|------|
-| `invoice_january.txt` | January Invoice | Contracts | invoice, billing, 2025 |
-| `contract_services_2025.txt` | Service Contract 2025 | Contracts | contract, services, legal |
-| `q1_financial_report.txt` | Q1 Financial Report | Reports | finance, quarterly, revenue |
+**Talk about:** files are stored with a `uniqid()` generated filename on disk so the original name cannot be guessed or enumerated. Download goes through `download.php` which checks ownership before serving — the raw file path is never exposed in the browser.
 
-After each upload, the table updates via AJAX without a page reload — point this out.
+#### 3c — Demonstrate recursive folder search
 
-6. **Talk about:** files are stored with a `uniqid()` generated filename on disk so the original name cannot be guessed. Download goes through `download.php` which checks ownership before serving — the raw file path is never exposed in the browser.
+**Show:** Folder sidebar on the left
+
+1. Click **Demo 1.1** (leaf folder) → 2 documents appear
+2. Click **Demo 1** (parent) → 4 documents appear — the 2 from Demo 1.1 are included
+3. Click **Demo Project** (root) → all 8 documents appear across all three levels
+
+**Talk about:** the original implementation used `WHERE folder_id = :id` — exact match only. A file placed in a subfolder was invisible from any ancestor. The fix uses a SQLite recursive CTE (`WITH RECURSIVE`) that walks the entire subtree before fetching documents. Clicking any folder now surfaces everything inside it at any depth.
 
 ---
 
@@ -542,14 +560,3 @@ After each upload, the table updates via AJAX without a page reload — point th
 4. Try a second search: `legal agreement` — the contract should surface at the top despite "legal agreement" not appearing verbatim in any title.
 5. **Talk about:** the search query and document list are sent to `api.anthropic.com/v1/messages` via cURL. Claude returns a comma-separated list of IDs in relevance order. If the API key is not set or the call fails, the original SQL order is returned unchanged — the feature degrades gracefully.
 
----
-
-### Step 5 — Recursive Folder Structure
-
-**Show:** Folder sidebar (run `http://localhost:8000/seed_demo.php` first if not already done)
-
-1. The sidebar shows the indented tree — **Demo Project** at root, **Demo 1 / Demo 2 / Demo 3** as children, **Demo 1.1 / Demo 2.1** as grandchildren
-2. Click **Demo 1.1** (leaf folder) → shows 2 documents (Demo 1.1.1, Demo 1.1.2)
-3. Click **Demo 1** (parent) → shows 4 documents — the 2 from Demo 1.1 appear too
-4. Click **Demo Project** (root) → shows all 8 documents across all three levels
-5. **Talk about:** the original implementation used `WHERE folder_id = :id` — exact match only. A file in a subfolder was invisible from the parent. The fix uses a SQLite recursive CTE (`WITH RECURSIVE`) that walks the entire folder subtree before fetching documents. This was a deliberate post-spec addition — the original professor spec said no recursive search, but three levels of nesting made the limitation obvious. See `feature-recursive-folder-search.md`.

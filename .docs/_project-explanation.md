@@ -6,20 +6,19 @@ Stack:
 
 
 Features:
-- [x] Authentication: 
-    - [x] Login / Logout
-    - [x] Session
-- [x] Secure file upload `auth/document_handler.php`, `api/handle.php`
+- [x] Authentication
+    - [x] Register / Login / Logout  `auth/auth.php`
+    - [x] Session tokens (stored in DB, 24h expiry)  `sessions` table
+- [x] Secure file upload  `auth/document_handler.php`, `api/handle.php`
     - [x] Categories & Tags
-    - [x] List, Filter, Delete Files
-- [x] Dashboard + AJAX `dashboard.php`, `js/dashboard.js`
-- [ ] Secure file download `download.php`
-- [ ] Edit doc metadate inline
-- [ ] Folder system with Icons
-- [ ] File Sharing
-- [ ] Claude API integration for Searching
-- [ ] Password reset via email
-- [ ]
+    - [x] List, Filter, Delete files
+- [x] Dashboard + AJAX  `dashboard.php`, `js/dashboard.js`
+- [x] Secure file download  `download.php`  (auth-gated, no raw path exposed)
+- [x] Edit document metadata inline  (modal in dashboard)
+- [x] Folder system with file icons  `folders` table, sidebar in dashboard
+- [x] File sharing between users  `shares` table
+- [x] Claude API integration for AI-ranked search  `auth/document_handler.php → aiRerank()`
+- [x] Password reset via email  `forgot_password.php`, `reset_password.php`, PHPMailer
 
 
 ## Explanation of basic notions used
