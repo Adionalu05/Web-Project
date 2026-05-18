@@ -78,5 +78,6 @@ if ($auth->isAuthenticated()) {
             </p>
         </div>
     </div>
+    <script src="js/theme.js"></script>
 </body>
 </html>

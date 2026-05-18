@@ -98,5 +98,6 @@ $tags = $documentHandler->getAllTags();
             </form>
         </div>
     </div>
+    <script src="js/theme.js"></script>
 </body>
 </html>

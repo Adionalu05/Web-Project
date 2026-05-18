@@ -108,5 +108,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $validToken) {
             <p class="auth-link"><a href="login.php">Back to Login</a></p>
         </div>
     </div>
+    <script src="js/theme.js"></script>
 </body>
 </html>

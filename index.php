@@ -239,5 +239,6 @@ në menyre te strukturuar dhe te sigurt.
 
 </footer>
 
+<script src="js/theme.js"></script>
 </body>
 </html>
