@@ -415,6 +415,76 @@ body.dark-mode .loading-spinner {
 .folder-item:hover { background: #ecf0f1; }
 .folder-item.active { background: #7e2a98; color: white; }
 
+.folder-item--parent { display: flex; align-items: center; gap: .3rem; }
+.folder-item--parent > span:last-child { flex: 1; }
+
+.folder-toggle {
+    font-size: .6rem;
+    width: 12px;
+    text-align: center;
+    cursor: pointer;
+    color: #7e2a98;
+    flex-shrink: 0;
+    user-select: none;
+}
+
+.folder-item.active .folder-toggle { color: white; }
+
+.folder-children { display: none; }
+
+/* Folder Pane — main content tree view */
+.folder-pane {
+    padding: 0.25rem 0;
+}
+
+.pane-folder-item {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.55rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #4e1e72;
+    transition: background 0.2s;
+    cursor: default;
+}
+
+.pane-folder-item:hover { background: #f3e8f8; }
+
+.pane-folder-name { flex: 1; }
+
+.pane-doc-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 0.9rem;
+    flex-wrap: wrap;
+    transition: background 0.2s;
+}
+
+.pane-doc-row:hover { background: #fafafa; }
+
+.pane-doc-icon { font-size: 1.2rem; flex-shrink: 0; }
+
+.pane-doc-title { font-weight: 500; flex: 1; min-width: 120px; }
+
+.pane-doc-tags { flex: 0.8; min-width: 80px; }
+
+.pane-doc-no-tags { color: #999; }
+
+.pane-doc-meta { color: #666; font-size: 0.8rem; white-space: nowrap; }
+
+.pane-doc-actions { display: flex; gap: 0.3rem; flex-wrap: wrap; flex-shrink: 0; }
+
+body.dark-mode .pane-folder-item        { color: #e8ecf5; }
+body.dark-mode .pane-folder-item:hover  { background: rgba(255,255,255,0.07); }
+body.dark-mode .pane-doc-row            { border-bottom-color: #2e2e2e; }
+body.dark-mode .pane-doc-row:hover      { background: rgba(255,255,255,0.04); }
+body.dark-mode .pane-doc-meta           { color: #aaa; }
+
 /* Modal Overlay */
 .modal-overlay {
     display: none;

@@ -116,17 +116,36 @@ if ($search) {
                         📂 All Documents
                     </div>
                     <?php
-                    // Build a tree and render it with indentation so nested folders are visible
+                    // Build a tree and render it with indentation so nested folders are visible.
+                    // Folders that have children render a collapse/expand arrow; clicking the arrow
+                    // toggles the child list without triggering loadFolder. Clicking the folder
+                    // name still loads all documents recursively (via the WITH RECURSIVE CTE).
                     function renderFolderTree($folders, $parentId = null, $depth = 0) {
                         foreach ($folders as $folder) {
                             $fp = $folder['parent_id'];
                             if (($fp === null || $fp === '') ? $parentId === null : (int)$fp === (int)$parentId) {
-                                $pad   = $depth * 14; // px indent per level
-                                $icon  = $depth === 0 ? '📁' : '📂';
-                                $id    = (int)$folder['id'];
-                                $name  = htmlspecialchars($folder['name']);
-                                echo "<div class='folder-item' style='padding-left:{$pad}px' onclick='loadFolder({$id}, this)'>{$icon} {$name}</div>";
-                                renderFolderTree($folders, $folder['id'], $depth + 1);
+                                $pad  = $depth * 14;
+                                $id   = (int)$folder['id'];
+                                $name = htmlspecialchars($folder['name']);
+
+                                // Check whether this folder has any children
+                                $hasChildren = false;
+                                foreach ($folders as $f) {
+                                    if ((int)$f['parent_id'] === $id) { $hasChildren = true; break; }
+                                }
+
+                                if ($hasChildren) {
+                                    $icon = $depth === 0 ? '📁' : '📂';
+                                    echo "<div class='folder-item folder-item--parent' style='padding-left:{$pad}px'>
+                                        <span class='folder-toggle' onclick='toggleFolder({$id}, event)'>▶</span>
+                                        <span onclick='loadFolder({$id}, this.closest(\".folder-item\"))'>{$icon} {$name}</span>
+                                    </div>";
+                                    echo "<div class='folder-children' id='folder-children-{$id}'>";
+                                    renderFolderTree($folders, $folder['id'], $depth + 1);
+                                    echo "</div>";
+                                } else {
+                                    echo "<div class='folder-item' style='padding-left:{$pad}px' onclick='loadFolder({$id}, this)'>📄 {$name}</div>";
+                                }
                             }
                         }
                     }
@@ -267,6 +286,8 @@ if ($search) {
         <div id="folderMessage"></div>
     </div>
 
+    <!-- Folder data for JS tree rendering -->
+    <script>var folderData = <?php echo json_encode(array_values($folders)); ?>;</script>
     <!-- jQuery -->
     <script src="js/jquery.min.js"></script>
     <script src="js/dashboard.js"></script>

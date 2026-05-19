@@ -1,4 +1,7 @@
 
+// Folder data injected by dashboard.php — fallback to empty if missing
+var folderData = window.folderData || [];
+
 // File icon map
 const FILE_ICONS = {
     pdf: '📄', doc: '📝', docx: '📝',
@@ -145,15 +148,103 @@ function loadFolder(folderId, el) {
         dataType: 'json'
     }).done(function (data) {
         if (data.success) {
-            $('#documentsContainer').html(
-                data.documents.length
-                    ? buildDocumentsTable(data.documents, false)
-                    : '<div class="empty-state"><p>This folder is empty.</p></div>'
-            );
+            $('#documentsContainer').html(buildFolderPane(folderId, data.documents));
         }
     }).fail(function () {
         $('#documentsContainer').html('<div class="alert alert-error">Failed to load folder documents.</div>');
     });
+}
+
+function toggleFolder(id, e) {
+    e.stopPropagation();
+    var $children = $('#folder-children-' + id);
+    var open = $children.slideToggle(150).is(':visible');
+    $(e.currentTarget).text(open ? '▼' : '▶');
+}
+
+// ─── Folder Pane Tree (main content area) ────────────────────────────────────
+
+function buildFolderPane(rootId, allDocs) {
+    // Group all fetched documents by their folder_id
+    var byFolder = {};
+    allDocs.forEach(function (doc) {
+        var fid = parseInt(doc.folder_id) || 0;
+        if (!byFolder[fid]) byFolder[fid] = [];
+        byFolder[fid].push(doc);
+    });
+
+    var hasChildFolders = folderData.some(function (f) { return parseInt(f.parent_id) === rootId; });
+    if (!allDocs.length && !hasChildFolders) {
+        return '<div class="empty-state"><p>This folder is empty.</p></div>';
+    }
+
+    return '<div class="folder-pane">' + renderPaneNode(rootId, byFolder, 0) + '</div>';
+}
+
+function renderPaneNode(folderId, byFolder, depth) {
+    var pad = depth * 20;
+    var html = '';
+
+    // Child folders first
+    folderData
+        .filter(function (f) { return parseInt(f.parent_id) === folderId; })
+        .forEach(function (folder) {
+            var fid = parseInt(folder.id);
+            var hasSubFolders = folderData.some(function (f) { return parseInt(f.parent_id) === fid; });
+            var hasDocs = byFolder[fid] && byFolder[fid].length > 0;
+            var hasChildren = hasSubFolders || hasDocs;
+
+            html += '<div class="pane-folder-item" style="padding-left:' + pad + 'px">';
+            if (hasChildren) {
+                html += '<span class="folder-toggle" onclick="togglePaneFolder(' + fid + ', event)">▶</span>';
+            } else {
+                html += '<span class="folder-toggle" style="visibility:hidden">▶</span>';
+            }
+            html += '<span class="pane-folder-name">📂 ' + esc(folder.name) + '</span>';
+            html += '</div>';
+
+            if (hasChildren) {
+                html += '<div class="folder-children" id="pane-children-' + fid + '">';
+                html += renderPaneNode(fid, byFolder, depth + 1);
+                html += '</div>';
+            }
+        });
+
+    // Direct documents in this folder
+    (byFolder[folderId] || []).forEach(function (doc) {
+        html += buildPaneDocRow(doc, pad);
+    });
+
+    return html;
+}
+
+function buildPaneDocRow(doc, pad) {
+    var icon    = getFileIcon(doc.file_format || '');
+    var tagsArr = doc.tags ? doc.tags.split(', ').map(function (t) {
+        return '<span class="tag">' + esc(t.trim()) + '</span>';
+    }).join('') : '';
+    var tagsHtml = tagsArr ? '<div class="tags">' + tagsArr + '</div>' : '<span class="pane-doc-no-tags">—</span>';
+
+    var html = '<div class="pane-doc-row" style="padding-left:' + (pad + 28) + 'px">';
+    html += '<span class="pane-doc-icon">' + icon + '</span>';
+    html += '<span class="pane-doc-title">' + esc(doc.title) + '</span>';
+    html += '<span class="pane-doc-tags">' + tagsHtml + '</span>';
+    html += '<span class="pane-doc-meta">' + esc(doc.category_name || 'N/A') + ' · ' + formatSize(doc.file_size) + ' · ' + formatDate(doc.uploaded_at) + '</span>';
+    html += '<span class="pane-doc-actions">';
+    html += '<a href="download.php?doc_id=' + doc.id + '" class="btn btn-small btn-primary">Download</a> ';
+    html += '<button class="btn btn-small btn-secondary" onclick=\'openEditModal(' + doc.id + ', "' + esc(doc.title) + '", ' + (doc.category_id || 0) + ', "' + esc(doc.tags || '') + '", "' + esc(doc.description || '') + '")\'>Edit</button> ';
+    html += '<button class="btn btn-small btn-success" onclick="openShareModal(' + doc.id + ')">Share</button> ';
+    html += '<button class="btn btn-small btn-danger" onclick="deleteDocument(' + doc.id + ')">Delete</button>';
+    html += '</span>';
+    html += '</div>';
+    return html;
+}
+
+function togglePaneFolder(id, e) {
+    e.stopPropagation();
+    var $children = $('#pane-children-' + id);
+    var open = $children.slideToggle(150).is(':visible');
+    $(e.currentTarget).text(open ? '▼' : '▶');
 }
 
 function loadAllDocuments() {

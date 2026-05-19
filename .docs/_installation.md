@@ -36,13 +36,19 @@ extension_dir = "C:\php\ext"
 ```
 
 **Aktivizo ekstensionet e nevojshme** — gjej dhe hiq `;` perpara cdo rreshti:
+
+Required `php.ini` extensions:
 ```ini
 extension=curl
 extension=openssl
 extension=sockets
 extension=pdo_sqlite
 extension=sqlite3
+extension_dir = "C:\php\ext"   ; must be absolute path on Windows
+upload_max_filesize = 10M
+post_max_size = 12M
 ```
+
 
 **Rrit limitin e upload-it:**
 ```ini

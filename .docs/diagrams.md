@@ -109,26 +109,53 @@ Kryetari i grupit (Project Lead) krijon një **plan projekti** dhe monitoron ecu
 gantt
     title Project Plan & Task Tracking
     dateFormat  YYYY-MM-DD
+
     section Setup
-    Repo setup & basic structure       :done,    a1, 2026-03-10, 1d
-    Initial documentation (proposal)   :done,    a2, 2026-03-11, 1d
+    Repo setup & basic structure        :done, s1, 2026-03-10, 1d
+    Initial documentation (proposal)    :done, s2, 2026-03-11, 1d
 
     section Core Features
-    User authentication               :active,  a3, 2026-03-12, 2d
-    File upload/download              :active,  a4, 2026-03-14, 3d
-    Search + filters                  :        a5, 2026-03-17, 2d
-    CRUD & metadata editing           :        a6, 2026-03-19, 2d
+    User authentication                 :done, c1, 2026-03-12, 3d
+    File upload / download              :done, c2, 2026-03-15, 4d
+    Dashboard + AJAX                    :done, c3, 2026-03-19, 3d
+    Search + filters                    :done, c4, 2026-03-22, 2d
+    CRUD & metadata editing             :done, c5, 2026-03-24, 2d
 
     section Security
-    Input validation & sanitization   :        a7, 2026-03-21, 2d
-    Access control & secure download  :        a8, 2026-03-23, 2d
-    Data encryption (email at rest)    :        a9, 2026-03-25, 1d
+    Input validation & sanitization     :done, sec1, 2026-03-26, 2d
+    Access control & secure download    :done, sec2, 2026-03-28, 2d
+    Email encryption (AES-256-CBC)      :done, sec3, 2026-04-01, 2d
+    Session token hardening             :done, sec4, 2026-04-03, 1d
+    CSRF origin check                   :done, sec5, 2026-04-04, 1d
 
-    section Extras & Reporting
-    Reporting & documentation         :        a10, 2026-03-26, 1d
-    Email Integration                  :    a10, 2026-03-26, 1d
-    AI Integration                      : a10, 2026-03-26, 1d
-    File Sharing                        : a10, 2026-03-26, 1d
+    section Professor Meetings
+    Meeting 1 — requirements review     :milestone, m1, 2026-04-06, 0d
+    Meeting 2 — folder & sharing spec   :milestone, m2, 2026-04-07, 0d
+    Meeting 3 — recursive folder review :milestone, m3, 2026-05-11, 0d
+    Meeting 4 — final pre-presentation  :milestone, m4, 2026-05-18, 0d
+
+    section Advanced Features
+    Folder system (sidebar + DB)        :done, f1, 2026-04-08, 5d
+    File sharing between users          :done, f2, 2026-04-13, 4d
+    Password reset via email            :done, f3, 2026-04-17, 5d
+    AI search reranking (Claude API)    :done, f4, 2026-04-22, 4d
+    Dark / light mode theme             :done, f5, 2026-04-26, 3d
+
+    section Recursive Folder Feature
+    Bug identified (exact-match limit)  :milestone, r0, 2026-04-28, 0d
+    WITH RECURSIVE CTE implementation   :done, r1, 2026-04-29, 3d
+    Seed demo script                    :done, r2, 2026-05-02, 2d
+    Sidebar tree renderer (PHP)         :done, r3, 2026-05-03, 1d
+
+    section Multi-Device & Sharing Demo
+    LAN binding (0.0.0.0) + firewall    :done, md1, 2026-05-18, 1d
+    Live sharing demo (two devices)     :done, md2, 2026-05-18, 1d
+
+    section Documentation & Presentation
+    Weekly reports + feature docs       :done, d1, 2026-04-06, 43d
+    Presentation walkthrough written    :done, d2, 2026-05-14, 5d
+    Media folder + diagram updates      :done, d3, 2026-05-18, 2d
+    Final dry-run & dev→main merge      :active, d4, 2026-05-19, 1d
 ```
 
 ### 3. Weekly report (Personi i kontaktit)

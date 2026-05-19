@@ -1,98 +1,12 @@
 # Document Management System — Web Dev Class
 
-Stack:
-* PHP 7.4+ (built-in server: `php -S localhost:8000`)
-* SQLite 3 via PDO (`pdo_sqlite`, `sqlite3` extensions)
-* jQuery (local copy at `js/jquery.min.js` — CDN unreachable on local network)
-* PHPMailer (`lib/PHPMailer/`) for Gmail SMTP
-* Anthropic Claude API (`claude-haiku-4-5-20251001`) for AI search reranking
+## Installation & Start-up
 
-Required `php.ini` extensions:
-```ini
-extension=curl
-extension=openssl
-extension=sockets
-extension=pdo_sqlite
-extension=sqlite3
-extension_dir = "C:\php\ext"   ; must be absolute path on Windows
-upload_max_filesize = 10M
-post_max_size = 12M
-```
-
-```mermaid
-flowchart LR
-    subgraph CLIENT["Browser"]
-        UI["Pages\ndashboard · login · register\nforgot_password · reset_password"]
-        AJAX["jQuery AJAX\njs/dashboard.js"]
-    end
-
-    subgraph SERVER["PHP Server"]
-        API["api/handle.php\n─────────────────\nSingle AJAX entry point\n12 actions · all auth-gated"]
-
-        subgraph CORE["Core Classes"]
-            AUTH["Auth\nauth/auth.php\n──────────────\nRegister · Login · Logout\nSession token validation\nbcrypt · same-origin check"]
-            DH["DocumentHandler\nauth/document_handler.php\n──────────────\nUpload · Search · Edit · Delete\nFolders · Share · aiRerank()"]
-        end
-
-        MAIL["PHPMailer wrapper\nauth/email.php"]
-        CFG["config/database.php\n──────────────\nSchema init\nAES-256-CBC helpers\nClaude API key"]
-    end
-
-    subgraph STORAGE["Storage"]
-        DB[("SQLite\ndocuments.db\n──────────────\n9 tables\nFKs + cascade deletes")]
-        FILES["uploads/\nFiles on disk\ngitignored"]
-    end
-
-    subgraph EXTERNAL["External Services"]
-        CLAUDE["Anthropic Claude API\nclaude-haiku-4-5-20251001\n──────────────\nAI search reranking\nGraceful fallback if no key"]
-        GMAIL["Gmail SMTP\nsmtp.gmail.com:587\n──────────────\nPassword reset email\nSTARTTLS · App password"]
-    end
-
-    UI --> AJAX
-    AJAX -->|"GET / POST ?action=X"| API
-    API --> AUTH
-    API --> DH
-    API -->|"password reset"| MAIL
-    AUTH <-->|"session tokens"| DB
-    DH <-->|"all queries"| DB
-    DH -->|"read/write files"| FILES
-    DH -->|"cURL · aiRerank()"| CLAUDE
-    MAIL -->|"STARTTLS · port 587"| GMAIL
-    CFG -.->|"schema init"| DB
-```
-
-```mermaid
-sequenceDiagram
-    actor User
-    participant Browser
-    participant api/handle.php
-    participant Auth
-    participant DocumentHandler
-    participant SQLite
-    participant Claude API
-
-    User->>Browser: clicks Search "financial"
-    Browser->>api/handle.php: GET ?action=search&q=financial
-    api/handle.php->>Auth: isAuthenticated()
-    Auth->>SQLite: SELECT sessions WHERE token=? AND expires_at > NOW
-    SQLite-->>Auth: valid session
-    Auth-->>api/handle.php: user_id = 3
-
-    api/handle.php->>DocumentHandler: searchDocuments("financial")
-    DocumentHandler->>SQLite: SELECT ... WHERE title LIKE '%financial%'
-    SQLite-->>DocumentHandler: [doc3, doc1, doc2]
-
-    DocumentHandler->>Claude API: POST /v1/messages (prompt + doc list)
-    Claude API-->>DocumentHandler: "3,1,2" (reranked IDs)
-    DocumentHandler-->>api/handle.php: [doc3, doc1, doc2] reordered
-
-    api/handle.php-->>Browser: JSON response
-    Browser-->>User: renders reranked results
-```
+Refer to: _installation.md
 
 ---
 
-## Features
+## Feature checklist
 
 - [x] Authentication
     - [x] Register / Login / Logout  `auth/auth.php`
@@ -131,6 +45,19 @@ PHP's library for making outbound HTTP requests. We use it in `aiRerank()` to ca
 - `POST`: sends data in the request body (not the URL). Used for: upload, login, delete, edit, share. Anything that mutates state must be POST.
 
 ---
+
+
+## Code Overview
+
+### Stack
+
+* PHP 7.4+ (built-in server: `php -S localhost:8000`)
+* SQLite 3 via PDO (`pdo_sqlite`, `sqlite3` extensions)
+* jQuery (local copy at `js/jquery.min.js` — CDN unreachable on local network)
+* PHPMailer (`lib/PHPMailer/`) for Gmail SMTP
+* Anthropic Claude API (`claude-haiku-4-5-20251001`) for AI search reranking
+
+
 
 ## File Structure
 
@@ -180,11 +107,9 @@ Web-Project/
 └── .docs/                     → all project documentation
 ```
 
----
 
-## Database
+### Database
 
-### Full Schema
 
 ```sql
 -- Users: stores credentials + encrypted email
@@ -313,7 +238,7 @@ $plainEmail = decryptValue($row['email']);
 
 ---
 
-## API Endpoints — `api/handle.php`
+### API Endpoints — `api/handle.php`
 
 All calls go to a single file. `?action=X` routes to the right logic. All require an active session (401 if not).
 
@@ -334,7 +259,7 @@ All calls go to a single file. `?action=X` routes to the right logic. All requir
 
 ---
 
-## DocumentHandler Methods — `auth/document_handler.php`
+### DocumentHandler Methods — `auth/document_handler.php`
 
 | Method | Description |
 |--------|-------------|
@@ -352,7 +277,7 @@ All calls go to a single file. `?action=X` routes to the right logic. All requir
 
 ---
 
-## Auth Flow
+### Auth Flow
 
 ```
 Register:
@@ -384,7 +309,7 @@ Logout:
 
 ---
 
-## Password Reset Flow
+### Password Reset Flow
 
 ```
 forgot_password.php (GET)  →  show email form
@@ -410,7 +335,7 @@ reset_password.php (POST)
 
 ---
 
-## AI Search Flow
+### AI Search Flow
 
 ```
 GET api/handle.php?action=search&q=financial
@@ -438,9 +363,80 @@ GET api/handle.php?action=search&q=financial
 
 If `CLAUDE_API_KEY` is empty or the cURL call fails → original SQL order returned unchanged. Search keeps working.
 
+```mermaid
+flowchart LR
+    subgraph CLIENT["Browser"]
+        UI["Pages\ndashboard · login · register\nforgot_password · reset_password"]
+        AJAX["jQuery AJAX\njs/dashboard.js"]
+    end
+
+    subgraph SERVER["PHP Server"]
+        API["api/handle.php\n─────────────────\nSingle AJAX entry point\n12 actions · all auth-gated"]
+
+        subgraph CORE["Core Classes"]
+            AUTH["Auth\nauth/auth.php\n──────────────\nRegister · Login · Logout\nSession token validation\nbcrypt · same-origin check"]
+            DH["DocumentHandler\nauth/document_handler.php\n──────────────\nUpload · Search · Edit · Delete\nFolders · Share · aiRerank()"]
+        end
+
+        MAIL["PHPMailer wrapper\nauth/email.php"]
+        CFG["config/database.php\n──────────────\nSchema init\nAES-256-CBC helpers\nClaude API key"]
+    end
+
+    subgraph STORAGE["Storage"]
+        DB[("SQLite\ndocuments.db\n──────────────\n9 tables\nFKs + cascade deletes")]
+        FILES["uploads/\nFiles on disk\ngitignored"]
+    end
+
+    subgraph EXTERNAL["External Services"]
+        CLAUDE["Anthropic Claude API\nclaude-haiku-4-5-20251001\n──────────────\nAI search reranking\nGraceful fallback if no key"]
+        GMAIL["Gmail SMTP\nsmtp.gmail.com:587\n──────────────\nPassword reset email\nSTARTTLS · App password"]
+    end
+
+    UI --> AJAX
+    AJAX -->|"GET / POST ?action=X"| API
+    API --> AUTH
+    API --> DH
+    API -->|"password reset"| MAIL
+    AUTH <-->|"session tokens"| DB
+    DH <-->|"all queries"| DB
+    DH -->|"read/write files"| FILES
+    DH -->|"cURL · aiRerank()"| CLAUDE
+    MAIL -->|"STARTTLS · port 587"| GMAIL
+    CFG -.->|"schema init"| DB
+```
+
+```mermaid
+sequenceDiagram
+    actor User
+    participant Browser
+    participant api/handle.php
+    participant Auth
+    participant DocumentHandler
+    participant SQLite
+    participant Claude API
+
+    User->>Browser: clicks Search "financial"
+    Browser->>api/handle.php: GET ?action=search&q=financial
+    api/handle.php->>Auth: isAuthenticated()
+    Auth->>SQLite: SELECT sessions WHERE token=? AND expires_at > NOW
+    SQLite-->>Auth: valid session
+    Auth-->>api/handle.php: user_id = 3
+
+    api/handle.php->>DocumentHandler: searchDocuments("financial")
+    DocumentHandler->>SQLite: SELECT ... WHERE title LIKE '%financial%'
+    SQLite-->>DocumentHandler: [doc3, doc1, doc2]
+
+    DocumentHandler->>Claude API: POST /v1/messages (prompt + doc list)
+    Claude API-->>DocumentHandler: "3,1,2" (reranked IDs)
+    DocumentHandler-->>api/handle.php: [doc3, doc1, doc2] reordered
+
+    api/handle.php-->>Browser: JSON response
+    Browser-->>User: renders reranked results
+```
+
 ---
 
-## Security Notes
+### Security Notes
 
 | Concern | Implementation |
 |---------|---------------|
@@ -456,7 +452,7 @@ If `CLAUDE_API_KEY` is empty or the cURL call fails → original SQL order retur
 
 ---
 
-## Known Bugs Fixed
+### Known Bugs Fixed
 
 | Bug | Root cause | Fix |
 |-----|------------|-----|
@@ -467,16 +463,6 @@ If `CLAUDE_API_KEY` is empty or the cURL call fails → original SQL order retur
 | Gmail SMTP auth fails | App password copied with spaces (`abcd efgh…`) | Remove all spaces from `MAIL_PASSWORD` in `config/mail.php` |
 | `openssl_decrypt IV 12 bytes` warning | Plain-text emails stored before openssl was enabled — `base64_decode` of a plain email is shorter than 16-byte IV | Use `base64_decode($v, true)` strict; return value as-is if false or too short |
 
----
-
-## Presentation Walkthrough
-
-Demo files for upload are in `demo-files/` (gitignored):
-- `invoice_january.txt` — invoice with billing keywords
-- `contract_services_2025.txt` — service contract with financial terms
-- `q1_financial_report.txt` — quarterly report with revenue/expense breakdown
-
-Run the seed first if showing the folder demo: `http://localhost:8000/seed_demo.php`
 
 ---
 
@@ -489,6 +475,15 @@ Run the seed first if showing the folder demo: `http://localhost:8000/seed_demo.
 3. Log in with the new credentials → lands on dashboard
 4. **Talk about:** session tokens — every request after login is validated against the `sessions` table in the DB, not just a cookie. Show the logout button and explain the token is deleted server-side, not just cleared client-side.
 
+**Key files:**
+
+| File | What it does |
+|------|-------------|
+| `register.php` | Registration form — collects username, email, password |
+| `login.php` | Login form — validates credentials, issues session token |
+| `auth/auth.php` | `register()` hashes password with bcrypt, encrypts email AES-256-CBC, stores SHA-256 hash for lookups; `login()` validates credentials and writes a `bin2hex(random_bytes(32))` token to the `sessions` table; `logout()` deletes the server-side token |
+| `config/database.php` | `encryptValue()` / `decryptValue()` — AES-256-CBC helpers; `initializeDatabase()` — creates all 9 tables on first run |
+
 ---
 
 ### Step 2 — Password Reset via Email
@@ -497,10 +492,32 @@ Run the seed first if showing the folder demo: `http://localhost:8000/seed_demo.
 
 1. Enter the registered email address → click **Send Reset Link**
 2. Open the inbox — show the email arriving from the system
+
+![email](media/image-3.png)
+
 3. Click the reset link → lands on the new password form
+
+![email-2](media/image-4.png)
+
 4. Enter a new password → redirected to login with a success message
+
+![new-password](media/image-5.png)
+
 5. Log in with the new password
+
+![login-in](media/image-6.png)
+
 6. **Talk about:** the token is a `bin2hex(random_bytes(32))` 64-character string stored in `password_resets` with a 1-hour expiry and a `used` flag — once clicked it cannot be used again. The email address in the DB is AES-256-CBC encrypted; lookup uses a SHA-256 hash instead of the plaintext.
+
+**Key files:**
+
+| File | What it does |
+|------|-------------|
+| `forgot_password.php` | Form that accepts an email address and triggers the reset flow |
+| `reset_password.php` | Validates the token from the link, renders the new password form |
+| `auth/auth.php` | `initiatePasswordReset()` generates the token, stores it with a 1-hour expiry, calls `sendEmail()`; `resetPassword()` checks the token is valid, unused, and not expired before updating the hash |
+| `auth/email.php` | PHPMailer wrapper — STARTTLS over port 587 to Gmail SMTP; builds and sends the reset email with the signed link |
+| `config/database.php` | `hashValue()` (SHA-256) used to look up the encrypted email without decrypting it |
 
 ---
 
@@ -540,6 +557,16 @@ Pick any file from `demo-files/` (e.g. `invoice_january.txt`) and upload it with
 
 **Talk about:** files are stored with a `uniqid()` generated filename on disk so the original name cannot be guessed or enumerated. Download goes through `download.php` which checks ownership before serving, the raw file path is never exposed in the browser.
 
+**Key files:**
+
+| File | What it does |
+|------|-------------|
+| `dashboard.php` | Renders the upload form and documents table; `renderDocumentsTable()` builds the HTML server-side on first load |
+| `api/handle.php` | `action=upload` validates extension against whitelist, enforces 10 MB cap, saves file with `uniqid()` name, inserts metadata into `documents` and tags into `document_tags` |
+| `auth/document_handler.php` | `getUserDocuments()` fetches documents with joined category and tag data; `deleteDocument()` removes file from disk and DB |
+| `download.php` | Auth-gated file delivery — verifies ownership before reading the file; never exposes the real path |
+| `js/dashboard.js` | Submits the upload form via `FormData` + `$.ajax`; on success re-renders only the documents table without a page reload |
+
 #### 3.3 — Demonstrate recursive folder search
 
 **Show:** Folder sidebar on the left
@@ -550,13 +577,24 @@ Pick any file from `demo-files/` (e.g. `invoice_january.txt`) and upload it with
 
 **Talk about:** the original implementation used `WHERE folder_id = :id` — exact match only. A file placed in a subfolder was invisible from any ancestor. The fix uses a SQLite recursive CTE (`WITH RECURSIVE`) that walks the entire subtree before fetching documents. Clicking any folder now surfaces everything inside it at any depth.
 
+**Key files:**
+
+| File | What it does |
+|------|-------------|
+| `auth/document_handler.php` | `getFolderDocuments()` — runs the `WITH RECURSIVE subfolder_ids` CTE to collect all descendant folder IDs, then fetches documents in any of them; `getFolders()` returns the full adjacency list for sidebar rendering; `createFolder()` inserts a new folder with an optional `parent_id` |
+| `dashboard.php` | `renderFolderTree()` — recursive PHP function that walks the adjacency list and renders indented folder items with `padding-left` scaled by depth |
+| `js/dashboard.js` | `loadFolder(id)` — AJAX call to `action=get_folder_documents`; updates the documents table in place |
+| `api/handle.php` | `action=get_folder_documents` delegates to `getFolderDocuments()`; `action=create_folder` validates name and calls `createFolder()` |
+
 ---
 
-### Step 4 — Multi-Device Access (Same Network)
+### Step 4 — Multi-Device Access + Document Sharing
 
-**Show:** The app running on a second laptop or phone connected to the same Wi-Fi
+**Show:** Two devices on the same Wi-Fi — one as User A (host laptop), one as User B (second device)
 
-1. Stop the server if it's running with `localhost`. Restart it bound to all interfaces:
+#### 4.1 — Connect the second device
+
+1. Restart the server bound to all interfaces:
    ```bash
    php -S 0.0.0.0:8000
    ```
@@ -565,9 +603,38 @@ Pick any file from `demo-files/` (e.g. `invoice_january.txt`) and upload it with
    ipconfig
    # look for IPv4 Address under the Wi-Fi adapter, e.g. 192.168.1.45
    ```
-3. On the second device open `http://192.168.1.45:8000` — the full app loads, login works, uploads work, everything is live over the LAN.
+3. On the second device open `http://192.168.1.45:8000` — the full app loads from the same database and `uploads/` folder. Register a second account (User B) here.
 
-**Talk about:** the PHP built-in server binds to `localhost` by default, which only accepts connections from the same machine. Passing `0.0.0.0` tells it to listen on all network interfaces. All traffic still hits the same SQLite database and the same `uploads/` folder on the host — there is no replication or syncing needed. Windows Firewall may need to allow port 8000 for `php.exe` the first time.
+**Talk about:** the PHP built-in server binds to `localhost` by default, which only accepts connections from the same machine. Passing `0.0.0.0` tells it to listen on all network interfaces. All traffic hits the same SQLite database — no replication needed. Windows Firewall may need to allow port 8000 for `php.exe` the first time.
+
+**Key files:**
+
+| File | What it does |
+|------|-------------|
+| `config/database.php` | Opens the single SQLite file at `data/documents.db` — every device on the network reads and writes the same file via PDO |
+| `auth/auth.php` | `isSameOriginRequest()` validates the `Referer` header against the server host on every POST — works correctly when the host is a LAN IP rather than localhost |
+| `.htaccess` | Blocks direct browser access to `auth/`, `config/`, `data/`, `uploads/` — applies regardless of which IP the server is reached on |
+
+#### 4.2 — Share a document
+
+**Show:** Back on User A's laptop (host)
+
+1. In the documents table, click the green **Share** button on any document
+2. A modal appears — enter User B's username → click **Share**
+3. A success message confirms the share was recorded
+
+**Show:** On the second device (User B), refresh the dashboard → click the **Shared with Me** tab → the document appears
+
+**Talk about:** the `shares` table holds a `document_id` + `shared_with_user_id` pair with a `UNIQUE` constraint — you cannot share the same document with the same user twice. `download.php` checks `ownership OR share permission` before serving any file, so User B can download it but cannot see User A's other documents. The raw file path is never sent to the browser.
+
+**Key files:**
+
+| File | What it does |
+|------|-------------|
+| `auth/document_handler.php` | `shareDocument()` inserts into `shares`; `getSharedDocuments()` joins `shares` → `documents` for the Shared tab |
+| `api/handle.php` | `action=share` validates the target username exists, then calls `shareDocument()`; `action=get_shared` returns the shared list as JSON |
+| `js/dashboard.js` | `openShareModal()` / `submitShare()` handle the modal AJAX flow; `switchTab('shared')` lazy-loads the shared list on first click |
+| `download.php` | Before serving any file: `WHERE d.id = ? AND (d.user_id = ? OR d.id IN (SELECT document_id FROM shares WHERE shared_with_user_id = ?))` |
 
 ---
 
@@ -580,4 +647,13 @@ Pick any file from `demo-files/` (e.g. `invoice_january.txt`) and upload it with
 3. **Point out:** the order is not purely alphabetical or by upload date — Claude has reranked them by semantic relevance. The Q1 Financial Report should rank first because its content is most directly about finance, even though the word appears in all three.
 4. Try a second search: `legal agreement` — the contract should surface at the top despite "legal agreement" not appearing verbatim in any title.
 5. **Talk about:** the search query and document list are sent to `api.anthropic.com/v1/messages` via cURL. Claude returns a comma-separated list of IDs in relevance order. If the API key is not set or the call fails, the original SQL order is returned unchanged — the feature degrades gracefully.
+
+**Key files:**
+
+| File | What it does |
+|------|-------------|
+| `auth/document_handler.php` | `searchDocuments()` runs a SQL `LIKE` query across title, description, and tags; `aiRerank()` builds the Claude prompt, calls the API via cURL, parses the returned ID sequence and reorders `$docs` to match |
+| `api/handle.php` | `action=search` calls `searchDocuments()` then `aiRerank()` and returns the sorted list as JSON |
+| `js/dashboard.js` | Intercepts the search form submit, fires `action=search` via AJAX, and re-renders the documents table with the ranked results |
+| `dashboard.php` | Server-side search path (GET params) also calls `aiRerank()` so the ranking applies on direct page load with a `?search=` URL too |
 

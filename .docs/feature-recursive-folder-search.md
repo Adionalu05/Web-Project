@@ -150,3 +150,79 @@ The tree is designed to exercise every level of the recursive query:
 If the CTE is broken, clicking Demo Project returns 0 documents — immediate binary fail signal during the live demo.
 
 `seed_demo.php` is listed in `.gitignore` alongside `config/mail.php` and `data/documents.db` (see `.gitignore`). It is a development tool only and should be deleted before any deployment.
+
+---
+
+## Addition — Collapsible Folder Tree UI
+
+**Date:** 2026-05-19
+
+### Motivation
+
+The recursive query surfaces all documents in a subtree correctly, but the sidebar itself showed every folder flat and fully visible at all times. For a tree with three levels of nesting this becomes visually cluttered. The goal was to add a collapse/expand layer so only the top level is visible by default, and child folders reveal themselves when the user explicitly opens a parent — without touching the data layer at all.
+
+### Approach
+
+The two actions on a parent folder are now split between two separate click targets:
+
+- **Arrow (▶/▼)** — toggles the child folder list open or closed
+- **Folder name** — fires `loadFolder(id)` and loads all documents recursively, exactly as before
+
+Leaf folders (no children) keep a single click target and a 📄 icon to distinguish them visually.
+
+### Changes
+
+**`dashboard.php` — `renderFolderTree()`**
+
+Before rendering a folder, the function scans the flat `$folders` array to check whether any sibling has `parent_id === $id`. If so, the folder is a parent and gets the two-target layout; otherwise it renders as a plain clickable item.
+
+```php
+$hasChildren = false;
+foreach ($folders as $f) {
+    if ((int)$f['parent_id'] === $id) { $hasChildren = true; break; }
+}
+
+if ($hasChildren) {
+    echo "<div class='folder-item folder-item--parent' style='padding-left:{$pad}px'>
+        <span class='folder-toggle' onclick='toggleFolder({$id}, event)'>▶</span>
+        <span onclick='loadFolder({$id}, this.closest(\".folder-item\"))'>{$icon} {$name}</span>
+    </div>";
+    echo "<div class='folder-children' id='folder-children-{$id}'>";
+    renderFolderTree($folders, $folder['id'], $depth + 1);
+    echo "</div>";
+} else {
+    echo "<div class='folder-item' style='padding-left:{$pad}px'
+               onclick='loadFolder({$id}, this)'>📄 {$name}</div>";
+}
+```
+
+Note: `this.closest('.folder-item')` is passed to `loadFolder` instead of `this` so the `.active` highlight always lands on the `.folder-item` container, not the inner `<span>`.
+
+**`js/dashboard.js` — `toggleFolder()`**
+
+```js
+function toggleFolder(id, e) {
+    e.stopPropagation();
+    var $children = $('#folder-children-' + id);
+    var open = $children.slideToggle(150).is(':visible');
+    $(e.currentTarget).text(open ? '▼' : '▶');
+}
+```
+
+`e.stopPropagation()` prevents the click from bubbling up to the `.folder-item` div, which would otherwise trigger `loadFolder`.
+
+**`css/style.css`**
+
+```css
+.folder-item--parent { display: flex; align-items: center; gap: .3rem; }
+.folder-toggle { font-size: .6rem; width: 12px; cursor: pointer; color: #7e2a98; }
+.folder-item.active .folder-toggle { color: white; }
+.folder-children { display: none; }
+```
+
+### What did not change
+
+- `getFolderDocuments()` and the `WITH RECURSIVE` CTE — untouched
+- `loadFolder()` in `dashboard.js` — untouched
+- `api/handle.php` — untouched
+- The active-state highlight behaviour — same as before, just rerouted through `.closest()`
