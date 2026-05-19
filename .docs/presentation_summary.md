@@ -552,7 +552,26 @@ Pick any file from `demo-files/` (e.g. `invoice_january.txt`) and upload it with
 
 ---
 
-### Step 4 — AI-Enhanced Search
+### Step 4 — Multi-Device Access (Same Network)
+
+**Show:** The app running on a second laptop or phone connected to the same Wi-Fi
+
+1. Stop the server if it's running with `localhost`. Restart it bound to all interfaces:
+   ```bash
+   php -S 0.0.0.0:8000
+   ```
+2. Find the host machine's local IP:
+   ```bash
+   ipconfig
+   # look for IPv4 Address under the Wi-Fi adapter, e.g. 192.168.1.45
+   ```
+3. On the second device open `http://192.168.1.45:8000` — the full app loads, login works, uploads work, everything is live over the LAN.
+
+**Talk about:** the PHP built-in server binds to `localhost` by default, which only accepts connections from the same machine. Passing `0.0.0.0` tells it to listen on all network interfaces. All traffic still hits the same SQLite database and the same `uploads/` folder on the host — there is no replication or syncing needed. Windows Firewall may need to allow port 8000 for `php.exe` the first time.
+
+---
+
+### Step 5 — AI-Enhanced Search
 
 **Show:** Search box at the top of the dashboard
 
