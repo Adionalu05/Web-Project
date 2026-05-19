@@ -226,7 +226,13 @@ if (!in_array($current_page, $public_pages)) {
     }
 
     if (!$auth->isAuthenticated()) {
-        header('Location: login.php?redirect=' . urlencode($_SERVER['REQUEST_URI']));
+        // API endpoints (handle.php) handle their own auth and return JSON — don't redirect them
+        if (basename($_SERVER['PHP_SELF']) === 'handle.php') {
+            http_response_code(401);
+            echo json_encode(['success' => false, 'error' => 'Unauthorized']);
+            exit;
+        }
+        header('Location: /login.php?redirect=' . urlencode($_SERVER['REQUEST_URI']));
         exit;
     }
 }

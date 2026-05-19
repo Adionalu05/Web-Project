@@ -21,6 +21,12 @@ Fix: replaced mail() with PHPMailer (lib/PHPMailer/). Configured Gmail SMTP in c
 getFolderDocuments() used WHERE d.folder_id = :folder_id — a strict equality check. A file placed in a subfolder has the subfolder's ID as folder_id, not the grandparent's. Clicking a parent folder whose files are only in subfolders returned an empty table with no error.
 Fix: rewritten using a SQLite recursive CTE (WITH RECURSIVE) to first collect all descendant folder IDs, then fetch all documents in that set. Full details in feature-recursive-folder-search.md.
 
+7. File sharing returns 404 /api/login.php — auth/auth.php + config/database.php
+Two bugs combined. First: auth.php's inline page-guard fires for every file that includes it, including api/handle.php. When isAuthenticated() returned false it redirected to login.php (relative URL) — from /api/handle.php that resolved to /api/login.php, which doesn't exist. Second: isAuthenticated() was returning false because config/database.php had no SQLite busy_timeout. With two devices hitting the DB simultaneously, a concurrent write would lock SQLite and the session SELECT threw a silent SQLITE_BUSY exception, swallowed by the catch block, making every user appear unauthenticated.
+Fix 1: added PRAGMA busy_timeout = 3000 immediately after the PDO connection in config/database.php — SQLite now retries for up to 3 s before throwing.
+Fix 2: changed the inline redirect in auth.php to an absolute path (/login.php) so it resolves correctly from any subdirectory.
+Fix 3: added a handle.php-specific branch in the inline guard that returns a JSON 401 instead of an HTML redirect, consistent with what api/handle.php expects from its callers.
+
 6. openssl_decrypt(): IV passed is only 12 bytes long — config/database.php
 Emails were stored as plain text while the openssl extension was disabled. After enabling openssl, decryptValue() tried to base64_decode those plain email strings and use the result as ciphertext — the decoded bytes were shorter than the 16-byte IV AES-256-CBC requires.
 Fix: changed base64_decode($value) to base64_decode($value, true) (strict mode). If the result is false or shorter than the IV length, the function returns the original value unchanged. Plain-text emails from before encryption was enabled pass through correctly.

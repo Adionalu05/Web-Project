@@ -12,6 +12,7 @@ if (!file_exists(DATA_DIR)) {
 try {
     $db = new PDO('sqlite:' . DB_PATH);
     $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $db->exec('PRAGMA busy_timeout = 3000'); // wait up to 3 s if DB is locked (multi-device)
 } catch (Exception $e) {
     die('Database connection error: ' . $e->getMessage());
 }
