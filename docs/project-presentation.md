@@ -2,7 +2,7 @@
 
 ## Installation & Start-up
 
-Refer to: _installation.md
+Refer to: `docs/deployment.md`
 
 ---
 

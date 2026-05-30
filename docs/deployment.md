@@ -4,7 +4,7 @@
 **Environment:** Local / LAN  
 **Date:** 2026-05-18  
 
-> Full step-by-step guide also in `.EN_Docs/_installation.md`
+> For PHP installation steps on Windows see the **PHP Setup** section below.
 
 ---
 
@@ -157,3 +157,75 @@ This creates a 3-level folder tree with 8 test documents. The script wipes the p
 | Second device cannot connect | Windows Firewall blocking port 8000 | Add inbound rule (see LAN section above) |
 | `openssl_decrypt` IV warning | Plain-text emails stored before openssl enabled | Already handled with strict base64 decode |
 | Sharing returns 404 | Relative login redirect + SQLite busy timeout | Already fixed in current version |
+| `Database connection error: could not find driver` | `pdo_sqlite` or `extension_dir` not configured | Set absolute `extension_dir` in php.ini; remove `;` before `extension=pdo_sqlite` |
+
+---
+
+## PHP Setup on Windows (first-time install)
+
+### 1. Install PHP
+
+- Download **Non Thread Safe** PHP 8.x from https://windows.php.net/download/
+- Extract to `C:\php`
+- Confirm: `php -v`
+
+### 2. Create php.ini
+
+```powershell
+Copy-Item C:\php\php.ini-development C:\php\php.ini
+```
+
+### 3. Add PHP to PATH
+
+- Open **System Properties → Environment Variables**
+- Under **System Variables**, select `Path` → **Edit**
+- Add `C:\php`
+- Click OK and restart the terminal
+- Confirm: `php -v`
+
+### 4. Enable extensions in php.ini
+
+Open `C:\php\php.ini` and make these changes:
+
+```ini
+; Required on Windows — must be absolute path
+extension_dir = "C:\php\ext"
+
+; Uncomment all of these (remove the leading semicolon)
+extension=pdo_sqlite
+extension=sqlite3
+extension=openssl
+extension=curl
+extension=sockets
+extension=fileinfo
+
+; Upload limits
+upload_max_filesize = 10M
+post_max_size = 12M
+```
+
+Confirm extensions are active:
+```bash
+php -m
+# Should include: curl, openssl, PDO, pdo_sqlite, sqlite3
+```
+
+---
+
+## SQLite CLI — Database Inspection
+
+Inspect the database directly from the terminal:
+
+```bash
+sqlite3 data/documents.db
+```
+
+Useful commands:
+```sql
+.tables                          -- list all tables
+PRAGMA table_info(users);        -- show columns for a table
+SELECT id, username FROM users;  -- query data
+.headers on                      -- show column names in output
+.mode column                     -- aligned column output
+.quit                            -- exit
+```
